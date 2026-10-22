@@ -1,0 +1,71 @@
+erDiagram
+    CLIENTE ||--o{ ALUGUEL : FAZ
+    LOCADORA ||--o{ ALUGUEL : RECEBE
+    VEICULO ||--o{ ALUGUEL : UTILIZADO
+    CATEGORIA ||--o{ VEICULO : PERTENCE
+    FUNCIONARIO ||--o{ ALUGUEL : GERENCIA
+    ALUGUEL ||--o{ PAGAMENTO : POSSUI
+
+    CLIENTE {
+        int id_cliente PK
+        string nome "NOT NULL"
+        string cpf "NOT NULL"
+        string telefone "NOT NULL"
+        string email "NOT NULL"
+    }
+
+    LOCADORA {
+        int id_locadora PK
+        string nome "NOT NULL"
+        string cnpj "NOT NULL"
+        string telefone "NOT NULL"
+        string email "NOT NULL" 
+    }
+
+    ALUGUEL {
+        int id_aluguel PK
+        int id_cliente PK, FK
+        int id_locadora PK,FK
+        int id_veiculo PK, FK
+        int id_funcionario PK, FK
+        date data_retirada "NOT NULL"
+        date data_devolucao_prevista "NOT NULL"
+        date data_devolucao_real "NOT NULL"
+        float valor_total "NOT NULL"
+        string status "NOT NULL"
+    }
+
+    VEICULO {
+        int id_veiculo PK
+        int id_categoria PK, FK
+        string placa "NOT NULL"
+        string marca "NOT NULL"
+        string modelo "NOT NULL"
+        int ano "NOT NULL"
+        float valor_diaria "NOT NULL"
+    }
+
+    CATEGORIA {
+        int id_categoria PK
+        string nome "NOT NULL"
+        string descricao "NOT NULL"
+    }
+
+    FUNCIONARIO {
+        int id_funcionario PK
+        string email "NOT NULL"
+        string senha "NOT NULL"
+        string nome "NOT NULL"
+        string cpf "NOT NULL"
+        string telefone "NOT NULL"
+        string cargo "NOT NULL"
+    }
+
+    PAGAMENTO {
+        int id_pagamento PK
+        int id_aluguel PK, FK
+        float valor "NOT NULL"
+        date data_pagamento "NOT NULL"
+        string metodo "NOT NULL"
+        string status "NOT NULL"
+    }
