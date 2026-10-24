@@ -7,65 +7,65 @@ erDiagram
     ALUGUEL ||--o{ PAGAMENTO : POSSUI
 
     CLIENTE {
-        int id_cliente PK
-        string nome "NOT NULL"
-        string cpf "NOT NULL"
-        string telefone "NOT NULL"
-        string email "NOT NULL"
+        integer id_cliente PK
+        varchar nome "NOT NULL"
+        varchar cpf "NOT NULL"
+        varchar telefone "NOT NULL"
+        varchar email "NOT NULL"
     }
 
     LOCADORA {
-        int id_locadora PK
-        string nome "NOT NULL"
-        string cnpj "NOT NULL"
-        string telefone "NOT NULL"
-        string email "NOT NULL" 
+        integer id_locadora PK
+        varchar nome "NOT NULL"
+        varchar cnpj "NOT NULL"
+        varchar telefone "NOT NULL"
+        varchar email "NOT NULL" 
     }
 
     ALUGUEL {
-        int id_aluguel PK
-        int id_cliente PK, FK
-        int id_locadora PK,FK
-        int id_veiculo PK, FK
-        int id_funcionario PK, FK
+        integer id_aluguel PK
+        integer id_cliente PK, FK
+        integer id_locadora PK,FK
+        integer id_veiculo PK, FK
+        integer id_funcionario PK, FK
         date data_retirada "NOT NULL"
         date data_devolucao_prevista "NOT NULL"
-        date data_devolucao_real "NOT NULL"
-        float valor_total "NOT NULL"
-        string status "NOT NULL"
+        date data_devolucao_real
+        numeric valor_total "NOT NULL"
+        varchar status "NOT NULL"
     }
 
     VEICULO {
-        int id_veiculo PK
-        int id_categoria PK, FK
-        string placa "NOT NULL"
-        string marca "NOT NULL"
-        string modelo "NOT NULL"
-        int ano "NOT NULL"
-        float valor_diaria "NOT NULL"
+        integer id_veiculo PK
+        integer id_categoria PK, FK
+        varchar placa "NOT NULL"
+        varchar marca "NOT NULL"
+        varchar modelo "NOT NULL"
+        integer ano "NOT NULL"
+        numeric valor_diaria "NOT NULL"
     }
 
     CATEGORIA {
-        int id_categoria PK
-        string nome "NOT NULL"
-        string descricao "NOT NULL"
+        integer id_categoria PK
+        varchar nome "NOT NULL"
+        varchar descricao "NOT NULL"
     }
 
     FUNCIONARIO {
-        int id_funcionario PK
-        string email "NOT NULL"
-        string senha "NOT NULL"
-        string nome "NOT NULL"
-        string cpf "NOT NULL"
-        string telefone "NOT NULL"
-        string cargo "NOT NULL"
+        integer id_funcionario PK
+        varchar email "NOT NULL"
+        varchar senha "NOT NULL"
+        varchar nome "NOT NULL"
+        varchar cpf "NOT NULL"
+        varchar telefone "NOT NULL"
+        varchar cargo "NOT NULL"
     }
 
     PAGAMENTO {
-        int id_pagamento PK
-        int id_aluguel PK, FK
-        float valor "NOT NULL"
+        integer id_pagamento PK
+        integer id_aluguel PK, FK
+        numeric valor "NOT NULL"
         date data_pagamento "NOT NULL"
-        string metodo "NOT NULL"
-        string status "NOT NULL"
+        varchar metodo "NOT NULL"
+        varchar status "NOT NULL"
     }
