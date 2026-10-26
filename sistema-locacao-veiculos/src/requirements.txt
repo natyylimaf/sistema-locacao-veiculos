@@ -1,3 +1,0 @@
-cx-Oracle==8.3.0
-pandas==1.4.4
-numpy==1.23.2
