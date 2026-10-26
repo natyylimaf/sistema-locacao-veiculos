@@ -1,0 +1,71 @@
+erDiagram
+    CLIENTE ||--o{ ALUGUEL : FAZ
+    LOCADORA ||--o{ ALUGUEL : RECEBE
+    VEICULO ||--o{ ALUGUEL : UTILIZADO
+    CATEGORIA ||--o{ VEICULO : PERTENCE
+    FUNCIONARIO ||--o{ ALUGUEL : GERENCIA
+    ALUGUEL ||--o{ PAGAMENTO : POSSUI
+
+    CLIENTE {
+        integer id_cliente PK
+        varchar nome "NOT NULL"
+        varchar cpf "NOT NULL"
+        varchar telefone "NOT NULL"
+        varchar email "NOT NULL"
+    }
+
+    LOCADORA {
+        integer id_locadora PK
+        varchar nome "NOT NULL"
+        varchar cnpj "NOT NULL"
+        varchar telefone "NOT NULL"
+        varchar email "NOT NULL" 
+    }
+
+    ALUGUEL {
+        integer id_aluguel PK
+        integer id_cliente PK, FK
+        integer id_locadora PK,FK
+        integer id_veiculo PK, FK
+        integer id_funcionario PK, FK
+        date data_retirada "NOT NULL"
+        date data_devolucao_prevista "NOT NULL"
+        date data_devolucao_real
+        numeric valor_total "NOT NULL"
+        varchar status "NOT NULL"
+    }
+
+    VEICULO {
+        integer id_veiculo PK
+        integer id_categoria PK, FK
+        varchar placa "NOT NULL"
+        varchar marca "NOT NULL"
+        varchar modelo "NOT NULL"
+        integer ano "NOT NULL"
+        numeric valor_diaria "NOT NULL"
+    }
+
+    CATEGORIA {
+        integer id_categoria PK
+        varchar nome "NOT NULL"
+        varchar descricao "NOT NULL"
+    }
+
+    FUNCIONARIO {
+        integer id_funcionario PK
+        varchar email "NOT NULL"
+        varchar senha "NOT NULL"
+        varchar nome "NOT NULL"
+        varchar cpf "NOT NULL"
+        varchar telefone "NOT NULL"
+        varchar cargo "NOT NULL"
+    }
+
+    PAGAMENTO {
+        integer id_pagamento PK
+        integer id_aluguel PK, FK
+        numeric valor "NOT NULL"
+        date data_pagamento "NOT NULL"
+        varchar metodo "NOT NULL"
+        varchar status "NOT NULL"
+    }
