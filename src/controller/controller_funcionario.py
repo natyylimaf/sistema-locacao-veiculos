@@ -3,31 +3,29 @@ from conexion.postgres_queries import PostgresQueries
 
 
 class Controller_Funcionario:
-    """Controlador CRUD de Funcionario, baseado no diagrama do projeto."""
 
     @staticmethod
     def _from_row(row):
         if row is None:
             return None
+
         return Funcionario(
-            row["id_funcionario"], row["nome"], row["cpf"],
-            row["telefone"], row["email"], row["cargo"]
+            row["id_funcionario"], row["email"], row.get("senha"), row["nome"],
+            row["cpf"], row["telefone"], row["cargo"]
         )
 
     def verifica_existencia_funcionario(self, db: PostgresQueries, id_funcionario: int) -> bool:
-        row = db.fetch_one(
+        return db.fetch_one(
             "SELECT id_funcionario FROM funcionario WHERE id_funcionario = %s",
             (id_funcionario,),
-        )
-        return row is not None
+        ) is not None
 
     def consultar_funcionario(self, id_funcionario: int):
         db = PostgresQueries()
         try:
             row = db.fetch_one(
-                "SELECT id_funcionario, nome, cpf, telefone, email, cargo "
-                "FROM funcionario WHERE id_funcionario = %s",
-                (id_funcionario,),
+                "SELECT id_funcionario, email, senha, nome, cpf, telefone, cargo "
+                "FROM funcionario WHERE id_funcionario = %s", (id_funcionario,)
             )
             return self._from_row(row)
         finally:
@@ -38,8 +36,10 @@ class Controller_Funcionario:
         cpf = input("CPF: ").strip()
         telefone = input("Telefone: ").strip()
         email = input("E-mail: ").strip()
+        senha = input("Senha: ").strip()
         cargo = input("Cargo: ").strip()
-        if not all((nome, cpf, telefone, email, cargo)):
+
+        if not all((nome, cpf, telefone, email, senha, cargo)):
             print("Todos os campos são obrigatórios.")
             return None
 
@@ -48,13 +48,14 @@ class Controller_Funcionario:
             if db.fetch_one("SELECT id_funcionario FROM funcionario WHERE cpf = %s", (cpf,)):
                 print(f"O CPF {cpf} já está cadastrado.")
                 return None
-
+            if db.fetch_one("SELECT id_funcionario FROM funcionario WHERE email = %s", (email,)):
+                print(f"O e-mail {email} já está cadastrado.")
+                return None
             row = db.execute(
-                "INSERT INTO funcionario (nome, cpf, telefone, email, cargo) "
-                "VALUES (%s, %s, %s, %s, %s) "
-                "RETURNING id_funcionario, nome, cpf, telefone, email, cargo",
-                (nome, cpf, telefone, email, cargo),
-                returning=True,
+                "INSERT INTO funcionario (email, senha, nome, cpf, telefone, cargo) "
+                "VALUES (%s, %s, %s, %s, %s, %s) "
+                "RETURNING id_funcionario, email, senha, nome, cpf, telefone, cargo",
+                (email, senha, nome, cpf, telefone, cargo), returning=True,
             )
             funcionario = self._from_row(row)
             print("Funcionário cadastrado com sucesso!")
@@ -75,36 +76,48 @@ class Controller_Funcionario:
             if not self.verifica_existencia_funcionario(db, id_funcionario):
                 print(f"O funcionário {id_funcionario} não existe.")
                 return None
-
             nome = input("Novo nome: ").strip()
             cpf = input("Novo CPF: ").strip()
             telefone = input("Novo telefone: ").strip()
             email = input("Novo e-mail: ").strip()
+            senha = input("Nova senha (deixe em branco para manter): ").strip()
             cargo = input("Novo cargo: ").strip()
+
             if not all((nome, cpf, telefone, email, cargo)):
-                print("Todos os campos são obrigatórios.")
+                print("Nome, CPF, telefone, e-mail e cargo são obrigatórios.")
                 return None
             if db.fetch_one(
-                "SELECT id_funcionario FROM funcionario "
-                "WHERE cpf = %s AND id_funcionario <> %s",
+                "SELECT id_funcionario FROM funcionario WHERE cpf = %s AND id_funcionario <> %s",
                 (cpf, id_funcionario),
             ):
                 print(f"O CPF {cpf} já pertence a outro funcionário.")
                 return None
-
-            row = db.execute(
-                "UPDATE funcionario SET nome = %s, cpf = %s, telefone = %s, "
-                "email = %s, cargo = %s WHERE id_funcionario = %s "
-                "RETURNING id_funcionario, nome, cpf, telefone, email, cargo",
-                (nome, cpf, telefone, email, cargo, id_funcionario),
-                returning=True,
-            )
-            funcionario = self._from_row(row)
-            print("Funcionário atualizado com sucesso!")
-            print(funcionario.to_string())
-            return funcionario
+            if db.fetch_one(
+                "SELECT id_funcionario FROM funcionario WHERE email = %s AND id_funcionario <> %s",
+                (email, id_funcionario),
+            ):
+                print(f"O e-mail {email} já pertence a outro funcionário.")
+                return None
+            
+            if senha:
+                db.execute(
+                    "UPDATE funcionario SET email = %s, senha = %s, nome = %s, cpf = %s, "
+                    "telefone = %s, cargo = %s WHERE id_funcionario = %s",
+                    (email, senha, nome, cpf, telefone, cargo, id_funcionario),
+                )
+            else:
+                db.execute(
+                    "UPDATE funcionario SET email = %s, nome = %s, cpf = %s, telefone = %s, "
+                    "cargo = %s WHERE id_funcionario = %s",
+                    (email, nome, cpf, telefone, cargo, id_funcionario),
+                )
         finally:
             db.close()
+
+        funcionario = self.consultar_funcionario(id_funcionario)
+        print("Funcionário atualizado com sucesso!")
+        print(funcionario.to_string())
+        return funcionario
 
     def excluir_funcionario(self):
         try:
@@ -112,13 +125,11 @@ class Controller_Funcionario:
         except ValueError:
             print("O ID deve ser um número inteiro.")
             return None
-
         db = PostgresQueries()
         try:
             row = db.fetch_one(
-                "SELECT id_funcionario, nome, cpf, telefone, email, cargo "
-                "FROM funcionario WHERE id_funcionario = %s",
-                (id_funcionario,),
+                "SELECT id_funcionario, email, senha, nome, cpf, telefone, cargo "
+                "FROM funcionario WHERE id_funcionario = %s", (id_funcionario,)
             )
             if row is None:
                 print(f"O funcionário {id_funcionario} não existe.")
@@ -129,7 +140,8 @@ class Controller_Funcionario:
             print(funcionario.to_string())
             return funcionario
         except Exception as erro:
-            print(f"Não foi possível excluir o funcionário. Verifique se há aluguéis vinculados. Detalhes: {erro}")
+            print("Não foi possível excluir o funcionário. Verifique se há aluguéis vinculados.")
+            print(f"Detalhes: {erro}")
             return None
         finally:
             db.close()

@@ -3,7 +3,6 @@ from conexion.postgres_queries import PostgresQueries
 
 
 class Controller_Categoria:
-    """Controlador CRUD de Categoria, baseado no diagrama do projeto."""
 
     @staticmethod
     def _from_row(row):

@@ -10,7 +10,6 @@ from model.funcionario import Funcionario
 
 
 class Controller_Aluguel:
-    """Controlador de Aluguel; nomes de tabelas/colunas seguem Locadora.mmd."""
 
     @staticmethod
     def _aluguel_from_row(row):
@@ -69,7 +68,6 @@ class Controller_Aluguel:
             db.close()
 
     def inserir_aluguel(self, aluguel: Aluguel):
-        """Insere um aluguel a partir do objeto Aluguel já preenchido."""
         if aluguel is None or any((aluguel.get_cliente() is None, aluguel.get_locadora() is None,
                                    aluguel.get_veiculo() is None, aluguel.get_funcionario() is None,
                                    aluguel.get_data_retirada() is None,
@@ -80,6 +78,8 @@ class Controller_Aluguel:
             raise ValueError("A devolução prevista não pode ser anterior à retirada.")
         if float(aluguel.get_valor_total()) < 0:
             raise ValueError("O valor total não pode ser negativo.")
+        if aluguel.get_status().strip().upper() not in {"ATIVO", "FINALIZADO", "CANCELADO"}:
+            raise ValueError("Status inválido. Use ATIVO, FINALIZADO ou CANCELADO.")
 
         ids = (aluguel.get_cliente().get_id_cliente(), aluguel.get_locadora().get_id_locadora(),
                aluguel.get_veiculo().get_id_veiculo(), aluguel.get_funcionario().get_id_funcionario())
@@ -96,7 +96,7 @@ class Controller_Aluguel:
                 "data_retirada, data_devolucao_prevista, data_devolucao_real, valor_total, status) "
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id_aluguel",
                 (*ids, aluguel.get_data_retirada(), aluguel.get_data_devolucao_prevista(),
-                 aluguel.get_data_devolucao_real(), aluguel.get_valor_total(), aluguel.get_status()),
+                 aluguel.get_data_devolucao_real(), aluguel.get_valor_total(), aluguel.get_status().strip().upper()),
                 returning=True,
             )
             return self.consultar_aluguel(row["id_aluguel"])
@@ -105,9 +105,10 @@ class Controller_Aluguel:
 
     def atualizar_status_aluguel(self, id_aluguel: int, status: str,
                                  data_devolucao_real: date = None):
-        """Atualiza status e, opcionalmente, a data real de devolução."""
-        if not status or not status.strip():
-            raise ValueError("O status não pode ficar vazio.")
+        
+        if not status or status.strip().upper() not in {"ATIVO", "FINALIZADO", "CANCELADO"}:
+            raise ValueError("Status inválido. Use ATIVO, FINALIZADO ou CANCELADO.")
+        status = status.strip().upper()
         db = PostgresQueries()
         try:
             if not self.verifica_existencia_aluguel(db, id_aluguel):
