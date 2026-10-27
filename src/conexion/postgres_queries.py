@@ -27,16 +27,21 @@ class PostgresQueries:
 
     def __init__(self, can_write: bool = False):
         self.can_write = can_write
-        # Configuração por variáveis de ambiente. Se elas não existirem, valem os
-        # dados do PostgreSQL da máquina virtual da disciplina (Docker):
-        # localhost, 5432, banco postgres, usuário postgres, senha postgres.
+
         self.host = os.getenv("PGHOST", "localhost")
         self.port = os.getenv("PGPORT", "5432")
         self.dbname = os.getenv("PGDATABASE", "postgres")
-        self.user = os.getenv("PGUSER", "postgres")
-        self.passwd = os.getenv("PGPASSWORD", "postgres")
+
+        with open(
+            "conexion/passphrase/authentication.postgre",
+            "r",
+            encoding="utf-8"
+        ) as f:
+            self.user, self.passwd = f.read().strip().split(",", 1)
+
         self.conn = None
         self.cur = None
+
 
     def __del__(self):
         self.close()
