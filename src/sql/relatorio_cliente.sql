@@ -3,4 +3,5 @@ SELECT c.id_cliente
      , c.cpf
      , c.telefone
      , c.email
-  FROM cliente c;
+  FROM cliente c
+ ORDER BY c.nome;
