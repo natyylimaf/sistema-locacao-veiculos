@@ -80,6 +80,17 @@ def _executar_com_tratamento(acao) -> None:
         print(f"\nNão foi possível concluir a operação: {erro}")
     input("\nPressione Enter para continuar...")
 
+def _executar_com_repeticao(acao, mensagem: str) -> None:
+    while True:
+        _executar_com_tratamento(acao)
+
+        resposta = input(
+            f"\n{mensagem} (S/N): "
+        ).strip().upper()
+
+        if resposta != "S":
+            break
+
 
 # --------------------------------------------------------------- RELATÓRIOS
 
@@ -173,9 +184,35 @@ def _atualizar_aluguel() -> None:
 
 
 def _excluir_aluguel() -> None:
-    for aluguel in ctrl_aluguel.listar_alugueis():
+    alugueis = ctrl_aluguel.listar_alugueis()
+
+    if not alugueis:
+        print("Não há aluguéis cadastrados.")
+        return
+
+    for aluguel in alugueis:
         print(aluguel.to_string())
-    id_aluguel = _ler_inteiro("ID do aluguel que deseja excluir: ")
+
+    id_aluguel = _ler_inteiro(
+        "ID do aluguel que deseja excluir: "
+    )
+
+    aluguel = ctrl_aluguel.consultar_aluguel(id_aluguel)
+
+    if aluguel is None:
+        raise ValueError("O aluguel informado não existe.")
+
+    print("\nAluguel selecionado:")
+    print(aluguel.to_string())
+
+    confirmacao = input(
+        "\nConfirma a exclusão deste aluguel? (S/N): "
+    ).strip().upper()
+
+    if confirmacao != "S":
+        print("Exclusão cancelada.")
+        return
+
     ctrl_aluguel.excluir_aluguel(id_aluguel)
     print("Aluguel excluído com sucesso!")
 
@@ -232,14 +269,44 @@ def _atualizar_pagamento() -> None:
 
 def _excluir_pagamento() -> None:
     pagamentos = ctrl_pagamento.listar_pagamentos()
+
     if not pagamentos:
         print("Não há pagamentos cadastrados.")
         return
+
     for pagamento in pagamentos:
         print(pagamento.to_string())
-    id_pagamento = _ler_inteiro("ID do pagamento que deseja excluir: ")
-    id_aluguel = _ler_inteiro("ID do aluguel relacionado ao pagamento: ")
-    ctrl_pagamento.excluir_pagamento(id_pagamento, id_aluguel)
+
+    id_pagamento = _ler_inteiro(
+        "ID do pagamento que deseja excluir: "
+    )
+    id_aluguel = _ler_inteiro(
+        "ID do aluguel relacionado ao pagamento: "
+    )
+
+    pagamento = ctrl_pagamento.consultar_pagamento(
+        id_pagamento, id_aluguel
+    )
+
+    if pagamento is None:
+        raise ValueError(
+            "Não foi encontrado um pagamento com os IDs informados."
+        )
+
+    print("\nPagamento selecionado:")
+    print(pagamento.to_string())
+
+    confirmacao = input(
+        "\nConfirma a exclusão deste pagamento? (S/N): "
+    ).strip().upper()
+
+    if confirmacao != "S":
+        print("Exclusão cancelada.")
+        return
+
+    ctrl_pagamento.excluir_pagamento(
+        id_pagamento, id_aluguel
+    )
     print("Pagamento excluído com sucesso!")
 
 
@@ -255,9 +322,14 @@ def inserir(opcao_inserir: int = 0) -> None:
         6: _inserir_aluguel,
         7: _inserir_pagamento,
     }
+
     acao = opcoes.get(opcao_inserir)
+
     if acao:
-        _executar_com_tratamento(acao)
+        _executar_com_repeticao(
+            acao,
+            "Deseja cadastrar outro registro desta entidade?"
+        )
     elif opcao_inserir != 0:
         print("Opção de cadastro inválida.")
 
@@ -274,9 +346,14 @@ def atualizar(opcao_atualizar: int = 0) -> None:
         6: _atualizar_aluguel,
         7: _atualizar_pagamento,
     }
+
     acao = opcoes.get(opcao_atualizar)
+
     if acao:
-        _executar_com_tratamento(acao)
+        _executar_com_repeticao(
+            acao,
+            "Deseja atualizar outro registro desta entidade?"
+        )
     elif opcao_atualizar != 0:
         print("Opção de atualização inválida.")
 
@@ -293,9 +370,14 @@ def excluir(opcao_excluir: int = 0) -> None:
         6: _excluir_aluguel,
         7: _excluir_pagamento,
     }
+
     acao = opcoes.get(opcao_excluir)
+
     if acao:
-        _executar_com_tratamento(acao)
+        _executar_com_repeticao(
+            acao,
+            "Deseja excluir outro registro desta entidade?"
+        )
     elif opcao_excluir != 0:
         print("Opção de remoção inválida.")
 
