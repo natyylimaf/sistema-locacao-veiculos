@@ -3,6 +3,7 @@ from conexion.postgres_queries import PostgresQueries
 
 
 class Controller_Locadora:
+    """Controlador CRUD de Locadora, baseado no diagrama do projeto."""
 
     @staticmethod
     def _from_row(row):
@@ -37,7 +38,6 @@ class Controller_Locadora:
         cnpj = input("CNPJ: ").strip()
         telefone = input("Telefone: ").strip()
         email = input("E-mail: ").strip()
-
         if not all((nome, cnpj, telefone, email)):
             print("Todos os campos são obrigatórios.")
             return None
@@ -83,7 +83,6 @@ class Controller_Locadora:
             cnpj = input("Novo CNPJ: ").strip()
             telefone = input("Novo telefone: ").strip()
             email = input("Novo e-mail: ").strip()
-            
             if not all((nome, cnpj, telefone, email)):
                 print("Todos os campos são obrigatórios.")
                 return None

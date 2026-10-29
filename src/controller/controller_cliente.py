@@ -1,11 +1,43 @@
 from model.cliente import Cliente
 from conexion.postgres_queries import PostgresQueries
+from src.controller.validacao_cpf import normalizar_cpf, validar_cpf
 
 
 class Controller_Cliente:
+    """
+    Controlador da entidade Cliente.
+
+    Premissas baseadas no diagrama do projeto:
+    - tabela: cliente
+    - colunas: id_cliente, nome, cpf, telefone, email
+    - id_cliente é gerado pelo PostgreSQL.
+    Confirme esses nomes no banco real antes de executar.
+    """
 
     def __init__(self):
         pass
+
+    @staticmethod
+    def _normalizar_cpf(cpf: str) -> str:
+        """Valida o CPF e retorna somente os 11 dígitos."""
+        cpf_normalizado = normalizar_cpf(cpf)
+        if not validar_cpf(cpf_normalizado):
+            raise ValueError("CPF inválido. Confira os 11 dígitos informados.")
+        return cpf_normalizado
+
+    def _normalizar_cpf(cpf: str) -> str:
+        """Valida o CPF e retorna somente os 11 dígitos."""
+        cpf = re.sub(r"\D", "", cpf)
+        if len(cpf) != 11 or cpf == cpf[0] * 11:
+            raise ValueError("CPF inválido. Informe 11 dígitos válidos.")
+        numeros = [int(d) for d in cpf]
+        soma = sum(numeros[i] * (10 - i) for i in range(9))
+        digito1 = (soma * 10 % 11) % 10
+        soma = sum(numeros[i] * (11 - i) for i in range(10))
+        digito2 = (soma * 10 % 11) % 10
+        if numeros[9] != digito1 or numeros[10] != digito2:
+            raise ValueError("CPF inválido. Confira os dígitos informados.")
+        return cpf
 
     @staticmethod
     def _cliente_from_row(row):
@@ -40,8 +72,14 @@ class Controller_Cliente:
             db.close()
 
     def inserir_cliente(self) -> Cliente:
+        """Solicita os dados, impede CPF duplicado e insere o cliente."""
         nome = input("Nome: ").strip()
-        cpf = input("CPF: ").strip()
+        cpf_digitado = input("CPF: ").strip()
+        try:
+            cpf = self._normalizar_cpf(cpf_digitado)
+        except ValueError as erro:
+            print(erro)
+            return None
         telefone = input("Telefone: ").strip()
         email = input("E-mail: ").strip()
 
@@ -52,7 +90,8 @@ class Controller_Cliente:
         db = PostgresQueries()
         try:
             existente = db.fetch_one(
-                "SELECT id_cliente FROM cliente WHERE cpf = %s",
+                "SELECT id_cliente FROM cliente "
+                "WHERE regexp_replace(cpf, '[^0-9]', '', 'g') = %s",
                 (cpf,),
             )
             if existente is not None:
@@ -87,7 +126,12 @@ class Controller_Cliente:
                 return None
 
             nome = input("Novo nome: ").strip()
-            cpf = input("Novo CPF: ").strip()
+            cpf_digitado = input("Novo CPF: ").strip()
+            try:
+                cpf = self._normalizar_cpf(cpf_digitado)
+            except ValueError as erro:
+                print(erro)
+                return None
             telefone = input("Novo telefone: ").strip()
             email = input("Novo e-mail: ").strip()
             if not all((nome, cpf, telefone, email)):
@@ -96,7 +140,8 @@ class Controller_Cliente:
 
             cpf_em_uso = db.fetch_one(
                 "SELECT id_cliente FROM cliente "
-                "WHERE cpf = %s AND id_cliente <> %s",
+                "WHERE regexp_replace(cpf, '[^0-9]', '', 'g') = %s "
+                "AND id_cliente <> %s",
                 (cpf, id_cliente),
             )
             if cpf_em_uso is not None:

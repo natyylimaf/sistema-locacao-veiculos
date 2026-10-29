@@ -4,6 +4,7 @@ from model.aluguel import Aluguel
 
 
 class Controller_Pagamento:
+    """Controlador de Pagamento, conforme as colunas do diagrama Locadora.mmd."""
 
     @staticmethod
     def _pagamento_from_row(row):
@@ -70,7 +71,7 @@ class Controller_Pagamento:
         try:
             if db.fetch_one("SELECT id_aluguel FROM aluguel WHERE id_aluguel = %s", (id_aluguel,)) is None:
                 raise ValueError(f"O aluguel {id_aluguel} não existe.")
-            
+            # O diagrama indica PK composta (id_pagamento, id_aluguel). O id é gerado pelo banco.
             row = db.execute(
                 "INSERT INTO pagamento (id_aluguel, valor, data_pagamento, metodo, status) "
                 "VALUES (%s, %s, %s, %s, %s) RETURNING id_pagamento, id_aluguel, valor, data_pagamento, metodo, status",

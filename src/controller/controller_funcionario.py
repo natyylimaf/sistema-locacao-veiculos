@@ -1,14 +1,39 @@
 from model.funcionario import Funcionario
 from conexion.postgres_queries import PostgresQueries
+from src.controller.validacao_cpf import normalizar_cpf, validar_cpf
 
 
 class Controller_Funcionario:
+    """Controlador CRUD conforme as colunas da tabela FUNCIONARIO."""
+
+    @staticmethod
+    def _normalizar_cpf(cpf: str) -> str:
+        """Valida o CPF e retorna somente os 11 dígitos."""
+        cpf_normalizado = normalizar_cpf(cpf)
+        if not validar_cpf(cpf_normalizado):
+            raise ValueError("CPF inválido. Confira os 11 dígitos informados.")
+        return cpf_normalizado
+
+    def _normalizar_cpf(cpf: str) -> str:
+        """Valida o CPF e retorna somente os 11 dígitos."""
+        cpf = re.sub(r"\D", "", cpf)
+        if len(cpf) != 11 or cpf == cpf[0] * 11:
+            raise ValueError("CPF inválido. Informe 11 dígitos válidos.")
+        numeros = [int(d) for d in cpf]
+        soma = sum(numeros[i] * (10 - i) for i in range(9))
+        digito1 = (soma * 10 % 11) % 10
+        soma = sum(numeros[i] * (11 - i) for i in range(10))
+        digito2 = (soma * 10 % 11) % 10
+        if numeros[9] != digito1 or numeros[10] != digito2:
+            raise ValueError("CPF inválido. Confira os dígitos informados.")
+        return cpf
 
     @staticmethod
     def _from_row(row):
         if row is None:
             return None
-
+        # A ordem dos argumentos corresponde ao construtor do model Funcionario:
+        # id, email, senha, nome, cpf, telefone, cargo.
         return Funcionario(
             row["id_funcionario"], row["email"], row.get("senha"), row["nome"],
             row["cpf"], row["telefone"], row["cargo"]
@@ -33,19 +58,24 @@ class Controller_Funcionario:
 
     def inserir_funcionario(self) -> Funcionario:
         nome = input("Nome: ").strip()
-        cpf = input("CPF: ").strip()
+        cpf_digitado = input("CPF: ").strip()
+        try:
+            cpf = self._normalizar_cpf(cpf_digitado)
+        except ValueError as erro:
+            print(erro)
+            return None
         telefone = input("Telefone: ").strip()
         email = input("E-mail: ").strip()
         senha = input("Senha: ").strip()
         cargo = input("Cargo: ").strip()
-
         if not all((nome, cpf, telefone, email, senha, cargo)):
             print("Todos os campos são obrigatórios.")
             return None
 
         db = PostgresQueries()
         try:
-            if db.fetch_one("SELECT id_funcionario FROM funcionario WHERE cpf = %s", (cpf,)):
+            if db.fetch_one("SELECT id_funcionario FROM funcionario "
+                "WHERE regexp_replace(cpf, '[^0-9]', '', 'g') = %s", (cpf,)):
                 print(f"O CPF {cpf} já está cadastrado.")
                 return None
             if db.fetch_one("SELECT id_funcionario FROM funcionario WHERE email = %s", (email,)):
@@ -77,17 +107,23 @@ class Controller_Funcionario:
                 print(f"O funcionário {id_funcionario} não existe.")
                 return None
             nome = input("Novo nome: ").strip()
-            cpf = input("Novo CPF: ").strip()
+            cpf_digitado = input("Novo CPF: ").strip()
+            try:
+                cpf = self._normalizar_cpf(cpf_digitado)
+            except ValueError as erro:
+                print(erro)
+                return None
             telefone = input("Novo telefone: ").strip()
             email = input("Novo e-mail: ").strip()
             senha = input("Nova senha (deixe em branco para manter): ").strip()
             cargo = input("Novo cargo: ").strip()
-
             if not all((nome, cpf, telefone, email, cargo)):
                 print("Nome, CPF, telefone, e-mail e cargo são obrigatórios.")
                 return None
             if db.fetch_one(
-                "SELECT id_funcionario FROM funcionario WHERE cpf = %s AND id_funcionario <> %s",
+                "SELECT id_funcionario FROM funcionario "
+                "WHERE regexp_replace(cpf, '[^0-9]', '', 'g') = %s "
+                "AND id_funcionario <> %s",
                 (cpf, id_funcionario),
             ):
                 print(f"O CPF {cpf} já pertence a outro funcionário.")
@@ -98,7 +134,6 @@ class Controller_Funcionario:
             ):
                 print(f"O e-mail {email} já pertence a outro funcionário.")
                 return None
-            
             if senha:
                 db.execute(
                     "UPDATE funcionario SET email = %s, senha = %s, nome = %s, cpf = %s, "

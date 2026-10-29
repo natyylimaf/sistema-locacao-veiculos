@@ -4,6 +4,7 @@ from conexion.postgres_queries import PostgresQueries
 
 
 class Controller_Veiculo:
+    """Controlador CRUD de Veiculo conforme a tabela VEICULO do PostgreSQL."""
 
     @staticmethod
     def _from_row(row):
@@ -14,7 +15,7 @@ class Controller_Veiculo:
             row["nome_categoria"],
             row["descricao_categoria"],
         )
- 
+        # A ordem segue exatamente o construtor de model.veiculo.Veiculo.
         return Veiculo(
             row["id_veiculo"], categoria, row["placa"], row["marca"],
             row["modelo"], row["ano"], row["valor_diaria"]
@@ -61,7 +62,6 @@ class Controller_Veiculo:
         placa = input("Placa: ").strip().upper()
         marca = input("Marca: ").strip()
         modelo = input("Modelo: ").strip()
-
         try:
             ano = int(input("Ano: ").strip())
             valor_diaria = float(input("Valor da diária: R$ ").strip().replace(",", "."))
@@ -117,7 +117,6 @@ class Controller_Veiculo:
             placa = input("Nova placa: ").strip().upper()
             marca = input("Nova marca: ").strip()
             modelo = input("Novo modelo: ").strip()
-            
             try:
                 ano = int(input("Novo ano: ").strip())
                 valor_diaria = float(input("Novo valor da diária: R$ ").strip().replace(",", "."))
