@@ -1,6 +1,5 @@
 SELECT f.id_funcionario
      , f.email
-     , f.senha
      , f.nome
      , f.cpf
      , f.telefone
