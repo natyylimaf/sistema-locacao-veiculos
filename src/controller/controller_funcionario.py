@@ -1,6 +1,6 @@
 from model.funcionario import Funcionario
 from conexion.postgres_queries import PostgresQueries
-from controller.validacao_cpf import normalizar_cpf, validar_cpf
+from validacao_cpf import normalizar_cpf, validar_cpf
 
 class Controller_Funcionario:
     """Controlador CRUD conforme as colunas da tabela FUNCIONARIO."""
@@ -12,6 +12,20 @@ class Controller_Funcionario:
         if not validar_cpf(cpf_normalizado):
             raise ValueError("CPF inválido. Confira os 11 dígitos informados.")
         return cpf_normalizado
+
+    def _normalizar_cpf(cpf: str) -> str:
+        """Valida o CPF e retorna somente os 11 dígitos."""
+        cpf = re.sub(r"\D", "", cpf)
+        if len(cpf) != 11 or cpf == cpf[0] * 11:
+            raise ValueError("CPF inválido. Informe 11 dígitos válidos.")
+        numeros = [int(d) for d in cpf]
+        soma = sum(numeros[i] * (10 - i) for i in range(9))
+        digito1 = (soma * 10 % 11) % 10
+        soma = sum(numeros[i] * (11 - i) for i in range(10))
+        digito2 = (soma * 10 % 11) % 10
+        if numeros[9] != digito1 or numeros[10] != digito2:
+            raise ValueError("CPF inválido. Confira os dígitos informados.")
+        return cpf
 
     @staticmethod
     def _from_row(row):
