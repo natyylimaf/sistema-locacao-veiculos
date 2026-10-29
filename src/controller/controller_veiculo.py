@@ -154,9 +154,12 @@ class Controller_Veiculo:
         print(veiculo.to_string())
         return veiculo
 
+
     def excluir_veiculo(self):
         try:
-            id_veiculo = int(input("ID do veículo que deseja excluir: ").strip())
+            id_veiculo = int(
+                input("ID do veículo que deseja excluir: ").strip()
+            )
         except ValueError:
             print("O ID deve ser um número inteiro.")
             return None
@@ -164,19 +167,42 @@ class Controller_Veiculo:
         db = PostgresQueries()
         try:
             row = db.fetch_one(
-                self._select_base() + " WHERE v.id_veiculo = %s", (id_veiculo,)
+                self._select_base() + " WHERE v.id_veiculo = %s",
+                (id_veiculo,),
             )
+
             if row is None:
                 print(f"O veículo {id_veiculo} não existe.")
                 return None
-            db.execute("DELETE FROM veiculo WHERE id_veiculo = %s", (id_veiculo,))
+
             veiculo = self._from_row(row)
-            print("Veículo excluído com sucesso!")
+
+            print("\nVeículo selecionado:")
             print(veiculo.to_string())
+
+            confirmacao = input(
+                "Tem certeza de que deseja excluir este veículo? (S/N): "
+            ).strip().upper()
+
+            if confirmacao != "S":
+                print("Exclusão cancelada.")
+                return None
+
+            db.execute(
+                "DELETE FROM veiculo WHERE id_veiculo = %s",
+                (id_veiculo,),
+            )
+
+            print("Veículo excluído com sucesso!")
             return veiculo
+
         except Exception as erro:
-            print("Não foi possível excluir o veículo. Verifique se há aluguéis vinculados.")
+            print(
+                "Não foi possível excluir o veículo. "
+                "Verifique se existem aluguéis vinculados a ele."
+            )
             print(f"Detalhes: {erro}")
             return None
         finally:
             db.close()
+

@@ -105,30 +105,75 @@ class Controller_Aluguel:
         finally:
             db.close()
 
-    def atualizar_status_aluguel(self, id_aluguel: int, status: str,
-                                 data_devolucao_real: date = None):
-        """Atualiza status e, opcionalmente, a data real de devolução."""
-        if not status or status.strip().upper() not in {"ATIVO", "FINALIZADO", "CANCELADO"}:
-            raise ValueError("Status inválido. Use ATIVO, FINALIZADO ou CANCELADO.")
-        status = status.strip().upper()
-        db = PostgresQueries()
-        try:
-            if not self.verifica_existencia_aluguel(db, id_aluguel):
-                raise ValueError(f"O aluguel {id_aluguel} não existe.")
-            db.execute(
-                "UPDATE aluguel SET status = %s, data_devolucao_real = %s WHERE id_aluguel = %s",
-                (status.strip(), data_devolucao_real, id_aluguel),
+    def atualizar_status_aluguel(
+        self,
+        id_aluguel: int,
+        status: str,
+        data_devolucao_real: date = None
+    ):
+        """Atualiza o status e a data real de devolução do aluguel."""
+
+        if not status or status.strip().upper() not in {
+            "ATIVO", "FINALIZADO", "CANCELADO"
+        }:
+            raise ValueError(
+                "Status inválido. Use ATIVO, FINALIZADO ou CANCELADO."
             )
+
+        status = status.strip().upper()
+
+        db = PostgresQueries()
+
+        try:
+            row = db.fetch_one(
+                "SELECT data_retirada FROM aluguel WHERE id_aluguel = %s",
+                (id_aluguel,)
+            )
+
+            if row is None:
+                raise ValueError(f"O aluguel {id_aluguel} não existe.")
+
+            if status == "FINALIZADO" and data_devolucao_real is None:
+                raise ValueError(
+                    "Informe a data real de devolução para finalizar o aluguel."
+                )
+
+            if (
+                data_devolucao_real is not None
+                and data_devolucao_real < row["data_retirada"]
+            ):
+                raise ValueError(
+                    "A data real de devolução não pode ser anterior à retirada."
+                )
+
+            db.execute(
+                """
+                UPDATE aluguel
+                SET status = %s,
+                    data_devolucao_real = %s
+                WHERE id_aluguel = %s
+                """,
+                (status, data_devolucao_real, id_aluguel)
+            )
+
         finally:
             db.close()
+
         return self.consultar_aluguel(id_aluguel)
 
     def excluir_aluguel(self, id_aluguel: int):
         db = PostgresQueries()
+
         try:
             if not self.verifica_existencia_aluguel(db, id_aluguel):
                 raise ValueError(f"O aluguel {id_aluguel} não existe.")
-            db.execute("DELETE FROM aluguel WHERE id_aluguel = %s", (id_aluguel,))
+
+            db.execute(
+                "DELETE FROM aluguel WHERE id_aluguel = %s",
+                (id_aluguel,)
+            )
+
         finally:
             db.close()
+
         return True

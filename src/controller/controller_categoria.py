@@ -102,9 +102,12 @@ class Controller_Categoria:
         finally:
             db.close()
 
+
     def excluir_categoria(self):
         try:
-            id_categoria = int(input("ID da categoria que deseja excluir: ").strip())
+            id_categoria = int(
+                input("ID da categoria que deseja excluir: ").strip()
+            )
         except ValueError:
             print("O ID deve ser um número inteiro.")
             return None
@@ -116,20 +119,39 @@ class Controller_Categoria:
                 "WHERE id_categoria = %s",
                 (id_categoria,),
             )
+
             if row is None:
                 print(f"A categoria {id_categoria} não existe.")
+                return None
+
+            categoria = self._from_row(row)
+
+            print("\nCategoria selecionada:")
+            print(categoria.to_string())
+
+            confirmacao = input(
+                "Tem certeza de que deseja excluir esta categoria? (S/N): "
+            ).strip().upper()
+
+            if confirmacao != "S":
+                print("Exclusão cancelada.")
                 return None
 
             db.execute(
                 "DELETE FROM categoria WHERE id_categoria = %s",
                 (id_categoria,),
             )
-            categoria = self._from_row(row)
+
             print("Categoria excluída com sucesso!")
-            print(categoria.to_string())
             return categoria
+
         except Exception as erro:
-            print(f"Não foi possível excluir a categoria. Verifique se há veículos vinculados. Detalhes: {erro}")
+            print(
+                "Não foi possível excluir a categoria. "
+                "Verifique se existem veículos vinculados a ela."
+            )
+            print(f"Detalhes: {erro}")
             return None
         finally:
             db.close()
+

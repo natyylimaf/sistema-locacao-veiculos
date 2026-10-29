@@ -110,9 +110,12 @@ class Controller_Locadora:
         finally:
             db.close()
 
+
     def excluir_locadora(self):
         try:
-            id_locadora = int(input("ID da locadora que deseja excluir: ").strip())
+            id_locadora = int(
+                input("ID da locadora que deseja excluir: ").strip()
+            )
         except ValueError:
             print("O ID deve ser um número inteiro.")
             return None
@@ -124,20 +127,38 @@ class Controller_Locadora:
                 "FROM locadora WHERE id_locadora = %s",
                 (id_locadora,),
             )
+
             if row is None:
                 print(f"A locadora {id_locadora} não existe.")
+                return None
+
+            locadora = self._from_row(row)
+
+            print("\nLocadora selecionada:")
+            print(locadora.to_string())
+
+            confirmacao = input(
+                "Tem certeza de que deseja excluir esta locadora? (S/N): "
+            ).strip().upper()
+
+            if confirmacao != "S":
+                print("Exclusão cancelada.")
                 return None
 
             db.execute(
                 "DELETE FROM locadora WHERE id_locadora = %s",
                 (id_locadora,),
             )
-            locadora = self._from_row(row)
+
             print("Locadora excluída com sucesso!")
-            print(locadora.to_string())
             return locadora
+
         except Exception as erro:
-            print(f"Não foi possível excluir a locadora. Verifique se há aluguéis vinculados. Detalhes: {erro}")
+            print(
+                "Não foi possível excluir a locadora. "
+                "Verifique se existem registros vinculados a ela."
+            )
+            print(f"Detalhes: {erro}")
             return None
         finally:
             db.close()

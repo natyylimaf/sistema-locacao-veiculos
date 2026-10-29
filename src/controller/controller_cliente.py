@@ -1,6 +1,6 @@
 from model.cliente import Cliente
 from conexion.postgres_queries import PostgresQueries
-from validacao_cpf import normalizar_cpf, validar_cpf
+from controller.validacao_cpf import normalizar_cpf, validar_cpf, ler_cpf
 
 class Controller_Cliente:
     """
@@ -23,20 +23,6 @@ class Controller_Cliente:
         if not validar_cpf(cpf_normalizado):
             raise ValueError("CPF inválido. Confira os 11 dígitos informados.")
         return cpf_normalizado
-
-    def _normalizar_cpf(cpf: str) -> str:
-        """Valida o CPF e retorna somente os 11 dígitos."""
-        cpf = re.sub(r"\D", "", cpf)
-        if len(cpf) != 11 or cpf == cpf[0] * 11:
-            raise ValueError("CPF inválido. Informe 11 dígitos válidos.")
-        numeros = [int(d) for d in cpf]
-        soma = sum(numeros[i] * (10 - i) for i in range(9))
-        digito1 = (soma * 10 % 11) % 10
-        soma = sum(numeros[i] * (11 - i) for i in range(10))
-        digito2 = (soma * 10 % 11) % 10
-        if numeros[9] != digito1 or numeros[10] != digito2:
-            raise ValueError("CPF inválido. Confira os dígitos informados.")
-        return cpf
 
     @staticmethod
     def _cliente_from_row(row):
@@ -73,12 +59,7 @@ class Controller_Cliente:
     def inserir_cliente(self) -> Cliente:
         """Solicita os dados, impede CPF duplicado e insere o cliente."""
         nome = input("Nome: ").strip()
-        cpf_digitado = input("CPF: ").strip()
-        try:
-            cpf = self._normalizar_cpf(cpf_digitado)
-        except ValueError as erro:
-            print(erro)
-            return None
+        cpf = ler_cpf("CPF: ")
         telefone = input("Telefone: ").strip()
         email = input("E-mail: ").strip()
 
@@ -111,6 +92,7 @@ class Controller_Cliente:
         finally:
             db.close()
 
+
     def atualizar_cliente(self) -> Cliente:
         try:
             id_cliente = int(input("ID do cliente que deseja atualizar: ").strip())
@@ -125,14 +107,10 @@ class Controller_Cliente:
                 return None
 
             nome = input("Novo nome: ").strip()
-            cpf_digitado = input("Novo CPF: ").strip()
-            try:
-                cpf = self._normalizar_cpf(cpf_digitado)
-            except ValueError as erro:
-                print(erro)
-                return None
+            cpf = ler_cpf("Novo CPF: ")
             telefone = input("Novo telefone: ").strip()
             email = input("Novo e-mail: ").strip()
+
             if not all((nome, cpf, telefone, email)):
                 print("Todos os campos são obrigatórios.")
                 return None
@@ -148,18 +126,22 @@ class Controller_Cliente:
                 return None
 
             row = db.execute(
-                "UPDATE cliente SET nome = %s, cpf = %s, telefone = %s, email = %s "
+                "UPDATE cliente SET nome = %s, cpf = %s, "
+                "telefone = %s, email = %s "
                 "WHERE id_cliente = %s "
                 "RETURNING id_cliente, nome, cpf, telefone, email",
                 (nome, cpf, telefone, email, id_cliente),
                 returning=True,
             )
+
             cliente = self._cliente_from_row(row)
             print("Cliente atualizado com sucesso!")
             print(cliente.to_string())
             return cliente
         finally:
             db.close()
+
+
 
     def excluir_cliente(self):
         try:
@@ -175,22 +157,39 @@ class Controller_Cliente:
                 "FROM cliente WHERE id_cliente = %s",
                 (id_cliente,),
             )
+
             if row is None:
                 print(f"O cliente de ID {id_cliente} não existe.")
                 return None
 
-            # Guardamos os dados antes de excluir para poder mostrá-los.
+            cliente = self._cliente_from_row(row)
+
+            print("\nCliente selecionado:")
+            print(cliente.to_string())
+
+            confirmacao = input(
+                "Tem certeza de que deseja excluir este cliente? (S/N): "
+            ).strip().upper()
+
+            if confirmacao != "S":
+                print("Exclusão cancelada.")
+                return None
+
             db.execute(
                 "DELETE FROM cliente WHERE id_cliente = %s",
                 (id_cliente,),
             )
-            cliente = self._cliente_from_row(row)
+
             print("Cliente removido com sucesso!")
-            print(cliente.to_string())
             return cliente
+
         except Exception as erro:
-            # Pode ocorrer, por exemplo, se o cliente estiver ligado a um aluguel.
-            print(f"Não foi possível excluir o cliente: {erro}")
+            print(
+                "Não foi possível excluir o cliente. "
+                "Verifique se existem aluguéis vinculados a ele."
+            )
+            print(f"Detalhes: {erro}")
             return None
         finally:
             db.close()
+
