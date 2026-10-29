@@ -10,7 +10,6 @@ from model.funcionario import Funcionario
 
 
 class Controller_Aluguel:
-    """Controlador de Aluguel; nomes de tabelas/colunas seguem Locadora.mmd."""
 
     @staticmethod
     def _aluguel_from_row(row):
