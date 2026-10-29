@@ -6,4 +6,4 @@ SELECT f.id_funcionario
      , f.telefone
      , f.cargo
   FROM funcionario f
- ORDER BY f.nome;
+ ORDER BY f.id_funcionario;
