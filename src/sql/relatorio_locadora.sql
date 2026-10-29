@@ -4,4 +4,4 @@ SELECT l.id_locadora
      , l.telefone
      , l.email
   FROM locadora l
- ORDER BY l.nome;
+ ORDER BY l.id_locadora;
