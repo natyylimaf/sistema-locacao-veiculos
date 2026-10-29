@@ -92,6 +92,26 @@ def _executar_com_repeticao(acao, mensagem: str) -> None:
             break
 
 
+def _exibir_lista_entidade(opcao: int) -> None:
+    """Exibe os registros cadastrados usando os relatórios antes de solicitar o ID."""
+    opcoes_relatorio = {
+        1: relatorio.get_relatorio_clientes,
+        2: relatorio.get_relatorio_locadoras,
+        3: relatorio.get_relatorio_categorias,
+        4: relatorio.get_relatorio_veiculos,
+        5: relatorio.get_relatorio_funcionarios,
+        6: relatorio.get_relatorio_alugueis,
+        7: relatorio.get_relatorio_pagamentos,
+    }
+    acao = opcoes_relatorio.get(opcao)
+    if acao:
+        print("\n" + "=" * 80)
+        print(" REGISTROS CADASTRADOS ".center(80, "="))
+        print("=" * 80)
+        acao()
+        print("=" * 80 + "\n")
+
+
 # --------------------------------------------------------------- RELATÓRIOS
 
 def reports(opcao_relatorio: int = 0) -> None:
@@ -165,13 +185,7 @@ def _inserir_aluguel() -> None:
 
 
 def _atualizar_aluguel() -> None:
-    alugueis = ctrl_aluguel.listar_alugueis()
-    if not alugueis:
-        print("Não há aluguéis cadastrados.")
-        return
-    for aluguel in alugueis:
-        print(aluguel.to_string())
-
+    # A lista já é exibida pelo _exibir_lista_entidade() na def atualizar()
     id_aluguel = _ler_inteiro("ID do aluguel: ")
     status = input("Novo status [ATIVO/FINALIZADO/CANCELADO]: ").strip().upper()
     if status == "FINALIZADO":
@@ -184,6 +198,7 @@ def _atualizar_aluguel() -> None:
 
 
 def _excluir_aluguel() -> None:
+<<<<<<< HEAD
     alugueis = ctrl_aluguel.listar_alugueis()
 
     if not alugueis:
@@ -213,6 +228,10 @@ def _excluir_aluguel() -> None:
         print("Exclusão cancelada.")
         return
 
+=======
+    # A lista já é exibida pelo _exibir_lista_entidade() na def excluir()
+    id_aluguel = _ler_inteiro("ID do aluguel que deseja excluir: ")
+>>>>>>> 47e49c1 (atualização em principal.py)
     ctrl_aluguel.excluir_aluguel(id_aluguel)
     print("Aluguel excluído com sucesso!")
 
@@ -220,14 +239,11 @@ def _excluir_aluguel() -> None:
 # -------------------------------------------------------------- PAGAMENTOS
 
 def _inserir_pagamento() -> None:
-    alugueis = ctrl_aluguel.listar_alugueis()
-    if not alugueis:
-        print("Cadastre um aluguel antes de registrar pagamentos.")
-        return
-    for aluguel in alugueis:
-        print(aluguel.to_string())
+    # Exibe a lista de aluguéis para facilitar a vinculação
+    print("\n--- Lista de Aluguéis para Pagamento ---")
+    relatorio.get_relatorio_alugueis()
 
-    id_aluguel = _ler_inteiro("ID do aluguel relacionado ao pagamento: ")
+    id_aluguel = _ler_inteiro("\nID do aluguel relacionado ao pagamento: ")
     valor = _ler_valor("Valor do pagamento (R$): ")
     data_pagamento = _ler_data("Data do pagamento (AAAA-MM-DD): ")
     metodo = input("Método [DINHEIRO/PIX/CARTAO_CREDITO/CARTAO_DEBITO]: ").strip().upper()
@@ -246,13 +262,7 @@ def _inserir_pagamento() -> None:
 
 
 def _atualizar_pagamento() -> None:
-    pagamentos = ctrl_pagamento.listar_pagamentos()
-    if not pagamentos:
-        print("Não há pagamentos cadastrados.")
-        return
-    for pagamento in pagamentos:
-        print(pagamento.to_string())
-
+    # A lista de pagamentos já é exibida na def atualizar()
     id_pagamento = _ler_inteiro("ID do pagamento que deseja atualizar: ")
     id_aluguel = _ler_inteiro("ID do aluguel relacionado ao pagamento: ")
     valor = _ler_valor("Novo valor (R$): ")
@@ -268,6 +278,7 @@ def _atualizar_pagamento() -> None:
 
 
 def _excluir_pagamento() -> None:
+<<<<<<< HEAD
     pagamentos = ctrl_pagamento.listar_pagamentos()
 
     if not pagamentos:
@@ -307,6 +318,12 @@ def _excluir_pagamento() -> None:
     ctrl_pagamento.excluir_pagamento(
         id_pagamento, id_aluguel
     )
+=======
+    # A lista de pagamentos já é exibida na def excluir()
+    id_pagamento = _ler_inteiro("ID do pagamento que deseja excluir: ")
+    id_aluguel = _ler_inteiro("ID do aluguel relacionado ao pagamento: ")
+    ctrl_pagamento.excluir_pagamento(id_pagamento, id_aluguel)
+>>>>>>> 47e49c1 (atualização em principal.py)
     print("Pagamento excluído com sucesso!")
 
 
@@ -350,10 +367,15 @@ def atualizar(opcao_atualizar: int = 0) -> None:
     acao = opcoes.get(opcao_atualizar)
 
     if acao:
+<<<<<<< HEAD
         _executar_com_repeticao(
             acao,
             "Deseja atualizar outro registro desta entidade?"
         )
+=======
+        _exibir_lista_entidade(opcao_atualizar)
+        _executar_com_tratamento(acao)
+>>>>>>> 47e49c1 (atualização em principal.py)
     elif opcao_atualizar != 0:
         print("Opção de atualização inválida.")
 
@@ -374,10 +396,15 @@ def excluir(opcao_excluir: int = 0) -> None:
     acao = opcoes.get(opcao_excluir)
 
     if acao:
+<<<<<<< HEAD
         _executar_com_repeticao(
             acao,
             "Deseja excluir outro registro desta entidade?"
         )
+=======
+        _exibir_lista_entidade(opcao_excluir)
+        _executar_com_tratamento(acao)
+>>>>>>> 47e49c1 (atualização em principal.py)
     elif opcao_excluir != 0:
         print("Opção de remoção inválida.")
 
