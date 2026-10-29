@@ -8,4 +8,4 @@ SELECT v.id_veiculo
   FROM veiculo v
  INNER JOIN categoria ct
     ON v.id_categoria = ct.id_categoria
- ORDER BY v.ano DESC, v.marca;
+ ORDER BY v.id_veiculo;
