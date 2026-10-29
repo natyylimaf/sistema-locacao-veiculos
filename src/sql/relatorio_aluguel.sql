@@ -18,4 +18,4 @@ SELECT a.id_aluguel
     ON a.id_veiculo = v.id_veiculo
  INNER JOIN funcionario f
     ON a.id_funcionario = f.id_funcionario
- ORDER BY a.data_retirada DESC;
+ ORDER BY a.id_aluguel;
