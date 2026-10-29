@@ -1,10 +1,9 @@
-
 from conexion.postgres_queries import PostgresQueries
 from utils import config
 
 
 class SplashScreen:
-    # Nomes de tabela fixos do projeto; não vêm de entrada do usuário.
+    # Nomes de tabela fixos do projeto.
     TABELAS = (
         ("clientes", "cliente"),
         ("locadoras", "locadora"),
@@ -16,35 +15,53 @@ class SplashScreen:
     )
 
     def __init__(self):
-        self.created_by = "Walisson Pastori, Nathália Lima, Davi Pitangui, Gabriel Modesto e Bryan Nascimento"
-        self.professor = "Prof. M.Sc. Howard Roatti"
+        self.created_by = (
+            "Walisson Pastori, Nathália Lima, Davi Pitangui, "
+            "Gabriel Modesto e Bryan Nascimento"
+        )
+        self.professor = "Howard Roatti"
         self.disciplina = "Banco de Dados"
         self.semestre = "2026/2"
 
     def get_totais(self) -> dict:
-        """Consulta as contagens. Se o banco estiver indisponível, retorna None."""
+        """Consulta a quantidade de registros de cada tabela."""
         db = PostgresQueries()
         totais = {}
+
         try:
             for nome_exibicao, tabela in self.TABELAS:
-                resultado = db.fetch_one(config.QUERY_COUNT.format(tabela=tabela))
-                totais[nome_exibicao] = resultado["total"] if resultado else 0
+                resultado = db.fetch_one(
+                    config.QUERY_COUNT.format(tabela=tabela)
+                )
+                totais[nome_exibicao] = (
+                    resultado["total"] if resultado else 0
+                )
+
         except Exception:
-            # A tela ainda pode ser exibida para ajudar a identificar a configuração
-            # pendente; o erro de conexão será detalhado quando o usuário acessar uma função.
-            return {nome: None for nome, _ in self.TABELAS}
+            # Permite exibir a tela mesmo se houver erro no banco.
+            return {
+                nome: None
+                for nome, _ in self.TABELAS
+            }
+
         finally:
             db.close()
+
         return totais
 
-    # Métodos mantidos para compatibilidade com o formato da tela do professor.
+    # Métodos mantidos para compatibilidade com o projeto.
     def _get_total(self, tabela: str):
         db = PostgresQueries()
+
         try:
-            resultado = db.fetch_one(config.QUERY_COUNT.format(tabela=tabela))
+            resultado = db.fetch_one(
+                config.QUERY_COUNT.format(tabela=tabela)
+            )
             return resultado["total"] if resultado else 0
+
         except Exception:
             return None
+
         finally:
             db.close()
 
@@ -70,28 +87,43 @@ class SplashScreen:
         return self._get_total("pagamento")
 
     def get_updated_screen(self) -> str:
+        # Obtém os totais do banco de dados.
         totais = self.get_totais()
 
+        # Formata os totais para exibição.
         def formatar(nome: str) -> str:
             valor = totais.get(nome)
             return "N/D" if valor is None else str(valor)
 
-        return f"""
-+==============================================================+
-|                 SISTEMA DE LOCAÇÃO DE VEÍCULOS                |
-+==============================================================+
-|                      TOTAL DE REGISTROS                       |
-|  Clientes:      {formatar('clientes'):>6}                                      |
-|  Locadoras:     {formatar('locadoras'):>6}                                      |
-|  Categorias:    {formatar('categorias'):>6}                                      |
-|  Veículos:      {formatar('veículos'):>6}                                      |
-|  Funcionários:  {formatar('funcionários'):>6}                                      |
-|  Aluguéis:      {formatar('aluguéis'):>6}                                      |
-|  Pagamentos:    {formatar('pagamentos'):>6}                                      |
-+--------------------------------------------------------------+
-| Criado por: {self.created_by:<49}|
-| Professor:  {self.professor:<49}|
-| Disciplina: {self.disciplina:<49}|
-| Semestre:   {self.semestre:<49}|
-+==============================================================+
-""".replace("\n+", "\n+")
+        # Define o tamanho da moldura.
+        largura = 62
+        borda = "#" * (largura + 2)
+
+        # Cria uma linha com as laterais da moldura.
+        def linha(texto=""):
+            return f"#{texto:<{largura}}#"
+
+        # Monta a tela que será exibida no terminal.
+        return "\n".join([
+            borda,
+            linha("SISTEMA DE LOCAÇÃO DE VEÍCULOS".center(largura)),
+            linha(),
+            linha("  TOTAL DE REGISTROS EXISTENTES"),
+            linha(f"    Clientes:      {formatar('clientes'):>6}"),
+            linha(f"    Locadoras:     {formatar('locadoras'):>6}"),
+            linha(f"    Categorias:    {formatar('categorias'):>6}"),
+            linha(f"    Veículos:      {formatar('veículos'):>6}"),
+            linha(f"    Funcionários:  {formatar('funcionários'):>6}"),
+            linha(f"    Aluguéis:      {formatar('aluguéis'):>6}"),
+            linha(f"    Pagamentos:    {formatar('pagamentos'):>6}"),
+            linha(),
+            linha("  CRIADO POR:"),
+            linha("  Walisson Pastori, Nathália Lima,"),
+            linha("  Davi Pitangui, Gabriel Modesto e"),
+            linha("  Bryan Nascimento"),
+            linha(),
+            linha(f"  Disciplina: {self.disciplina}"),
+            linha(f"              {self.semestre}"),
+            linha(f"  Professor:  {self.professor}"),
+            borda,
+        ])
