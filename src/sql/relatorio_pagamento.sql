@@ -7,4 +7,4 @@ SELECT p.id_pagamento
   FROM pagamento p
  INNER JOIN aluguel a
     ON p.id_aluguel = a.id_aluguel
- ORDER BY p.id_locadora;
+ ORDER BY p.id_pagamento;
