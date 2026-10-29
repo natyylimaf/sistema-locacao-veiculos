@@ -1,147 +1,360 @@
+"""Ponto de entrada do Sistema de Locação de Veículos."""
+
+from datetime import date
+
+from conexion.postgres_queries import PostgresQueries
+from controller.controller_aluguel import Controller_Aluguel
+from controller.controller_categoria import Controller_Categoria
+from controller.controller_cliente import Controller_Cliente
+from controller.controller_funcionario import Controller_Funcionario
+from controller.controller_locadora import Controller_Locadora
+from controller.controller_pagamento import Controller_Pagamento
+from controller.controller_veiculo import Controller_Veiculo
+from model.aluguel import Aluguel
+from model.pagamento import Pagamento
+from reports.relatorios import Relatorio
 from utils import config
 from utils.splash_screen import SplashScreen
-from reports.relatorios import Relatorio
-from controller.controller_produto import Controller_Produto
-from controller.controller_cliente import Controller_Cliente
-from controller.controller_fornecedor import Controller_Fornecedor
-from controller.controller_pedido import Controller_Pedido
-from controller.controller_item_pedido import Controller_Item_Pedido
+
 
 tela_inicial = SplashScreen()
 relatorio = Relatorio()
-ctrl_produto = Controller_Produto()
+ctrl_aluguel = Controller_Aluguel()
+ctrl_categoria = Controller_Categoria()
 ctrl_cliente = Controller_Cliente()
-ctrl_fornecedor = Controller_Fornecedor()
-ctrl_pedido = Controller_Pedido()
-ctrl_item_pedido = Controller_Item_Pedido()
+ctrl_funcionario = Controller_Funcionario()
+ctrl_locadora = Controller_Locadora()
+ctrl_pagamento = Controller_Pagamento()
+ctrl_veiculo = Controller_Veiculo()
 
-def reports(opcao_relatorio:int=0):
 
-    if opcao_relatorio == 1:
-        relatorio.get_relatorio_pedidos_por_fornecedor()            
-    elif opcao_relatorio == 2:
-        relatorio.get_relatorio_pedidos()
-    elif opcao_relatorio == 3:
-        relatorio.get_relatorio_produtos()
-    elif opcao_relatorio == 4:
-        relatorio.get_relatorio_clientes()
-    elif opcao_relatorio == 5:
-        relatorio.get_relatorio_fornecedores()
-    elif opcao_relatorio == 6:
-        relatorio.get_relatorio_itens_pedidos()
+def _ler_inteiro(mensagem: str) -> int:
+    """Lê um número inteiro e exibe uma mensagem clara em caso de erro."""
+    try:
+        return int(input(mensagem).strip())
+    except ValueError as erro:
+        raise ValueError("Digite um número inteiro válido.") from erro
 
-def inserir(opcao_inserir:int=0):
 
-    if opcao_inserir == 1:                               
-        novo_produto = ctrl_produto.inserir_produto()
-    elif opcao_inserir == 2:
-        novo_cliente = ctrl_cliente.inserir_cliente()
-    elif opcao_inserir == 3:
-        novo_fornecedor = ctrl_fornecedor.inserir_fornecedor()
-    elif opcao_inserir == 4:
-        novo_pedido = ctrl_pedido.inserir_pedido()
-    elif opcao_inserir == 5:
-        novo_item_pedido = ctrl_item_pedido.inserir_item_pedido()
+def _ler_data(mensagem: str, permitir_vazio: bool = False):
+    """Lê datas no formato AAAA-MM-DD, usado pelo PostgreSQL e pelos modelos."""
+    texto = input(mensagem).strip()
+    if permitir_vazio and not texto:
+        return None
+    try:
+        return date.fromisoformat(texto)
+    except ValueError as erro:
+        raise ValueError("Data inválida. Use o formato AAAA-MM-DD (ex.: 2026-10-28).") from erro
 
-def atualizar(opcao_atualizar:int=0):
 
-    if opcao_atualizar == 1:
-        relatorio.get_relatorio_produtos()
-        produto_atualizado = ctrl_produto.atualizar_produto()
-    elif opcao_atualizar == 2:
-        relatorio.get_relatorio_clientes()
-        cliente_atualizado = ctrl_cliente.atualizar_cliente()
-    elif opcao_atualizar == 3:
-        relatorio.get_relatorio_fornecedores()
-        fornecedor_atualizado = ctrl_fornecedor.atualizar_fornecedor()
-    elif opcao_atualizar == 4:
-        relatorio.get_relatorio_pedidos()
-        pedido_atualizado = ctrl_pedido.atualizar_pedido()
-    elif opcao_atualizar == 5:
-        relatorio.get_relatorio_itens_pedidos()
-        item_pedido_atualizado = ctrl_item_pedido.atualizar_item_pedido()
+def _ler_valor(mensagem: str) -> float:
+    """Aceita valor decimal com ponto ou vírgula."""
+    try:
+        return float(input(mensagem).strip().replace("R$", "").replace(" ", "").replace(",", "."))
+    except ValueError as erro:
+        raise ValueError("Digite um valor numérico válido, por exemplo 120,50.") from erro
 
-def excluir(opcao_excluir:int=0):
 
-    if opcao_excluir == 1:
-        relatorio.get_relatorio_produtos()
-        ctrl_produto.excluir_produto()
-    elif opcao_excluir == 2:                
-        relatorio.get_relatorio_clientes()
-        ctrl_cliente.excluir_cliente()
-    elif opcao_excluir == 3:                
-        relatorio.get_relatorio_fornecedores()
-        ctrl_fornecedor.excluir_fornecedor()
-    elif opcao_excluir == 4:                
-        relatorio.get_relatorio_pedidos()
-        ctrl_pedido.excluir_pedido()
-    elif opcao_excluir == 5:
-        relatorio.get_relatorio_itens_pedidos()
-        ctrl_item_pedido.excluir_item_pedido()
+def _listar_opcoes(query: str, titulo: str) -> None:
+    """Lista IDs e campos resumidos para ajudar no preenchimento de relações."""
+    db = PostgresQueries()
+    try:
+        registros = db.fetch_all(query)
+        print(f"\n--- {titulo} ---")
+        if not registros:
+            print("Nenhum registro cadastrado.")
+            return
+        for registro in registros:
+            print(" | ".join(f"{chave}: {valor}" for chave, valor in registro.items()))
+    finally:
+        db.close()
 
-def run():
+
+def _executar_com_tratamento(acao) -> None:
+    """Evita que um erro de entrada ou do banco encerre o programa inteiro."""
+    try:
+        acao()
+    except KeyboardInterrupt:
+        print("\nOperação interrompida.")
+    except Exception as erro:
+        print(f"\nNão foi possível concluir a operação: {erro}")
+    input("\nPressione Enter para continuar...")
+
+
+# --------------------------------------------------------------- RELATÓRIOS
+
+def reports(opcao_relatorio: int = 0) -> None:
+    opcoes = {
+        1: relatorio.get_relatorio_clientes,
+        2: relatorio.get_relatorio_locadoras,
+        3: relatorio.get_relatorio_veiculos,
+        4: relatorio.get_relatorio_funcionarios,
+        5: relatorio.get_relatorio_categorias,
+        6: relatorio.get_relatorio_alugueis,
+        7: relatorio.get_relatorio_pagamentos,
+        8: relatorio.get_relatorio_faturamento,
+    }
+    acao = opcoes.get(opcao_relatorio)
+    if acao:
+        acao()
+    elif opcao_relatorio != 0:
+        print("Opção de relatório inválida.")
+
+
+# --------------------------------------------------------------- ALUGUÉIS
+
+def _novo_aluguel() -> Aluguel:
+    _listar_opcoes("SELECT id_cliente, nome, cpf FROM cliente ORDER BY id_cliente", "Clientes")
+    id_cliente = _ler_inteiro("ID do cliente: ")
+
+    _listar_opcoes("SELECT id_locadora, nome, cnpj FROM locadora ORDER BY id_locadora", "Locadoras")
+    id_locadora = _ler_inteiro("ID da locadora: ")
+
+    _listar_opcoes(
+        "SELECT id_veiculo, placa, marca, modelo, valor_diaria FROM veiculo ORDER BY id_veiculo",
+        "Veículos",
+    )
+    id_veiculo = _ler_inteiro("ID do veículo: ")
+
+    _listar_opcoes(
+        "SELECT id_funcionario, nome, cargo FROM funcionario ORDER BY id_funcionario",
+        "Funcionários",
+    )
+    id_funcionario = _ler_inteiro("ID do funcionário responsável: ")
+
+    cliente = ctrl_cliente.consultar_cliente(id_cliente)
+    locadora = ctrl_locadora.consultar_locadora(id_locadora)
+    veiculo = ctrl_veiculo.consultar_veiculo(id_veiculo)
+    funcionario = ctrl_funcionario.consultar_funcionario(id_funcionario)
+    if any(item is None for item in (cliente, locadora, veiculo, funcionario)):
+        raise ValueError("Um dos IDs informados não existe. Confira as listas e tente novamente.")
+
+    data_retirada = _ler_data("Data da retirada (AAAA-MM-DD): ")
+    data_prevista = _ler_data("Data prevista para devolução (AAAA-MM-DD): ")
+    valor_total = _ler_valor("Valor total do aluguel (R$): ")
+    status = input("Status [ATIVO/FINALIZADO/CANCELADO] (padrão ATIVO): ").strip().upper() or "ATIVO"
+
+    return Aluguel(
+        cliente=cliente,
+        locadora=locadora,
+        veiculo=veiculo,
+        funcionario=funcionario,
+        data_retirada=data_retirada,
+        data_devolucao_prevista=data_prevista,
+        data_devolucao_real=None,
+        valor_total=valor_total,
+        status=status,
+    )
+
+
+def _inserir_aluguel() -> None:
+    aluguel = ctrl_aluguel.inserir_aluguel(_novo_aluguel())
+    print("Aluguel cadastrado com sucesso!")
+    print(aluguel.to_string())
+
+
+def _atualizar_aluguel() -> None:
+    alugueis = ctrl_aluguel.listar_alugueis()
+    if not alugueis:
+        print("Não há aluguéis cadastrados.")
+        return
+    for aluguel in alugueis:
+        print(aluguel.to_string())
+
+    id_aluguel = _ler_inteiro("ID do aluguel: ")
+    status = input("Novo status [ATIVO/FINALIZADO/CANCELADO]: ").strip().upper()
+    if status == "FINALIZADO":
+        data_real = _ler_data("Data real da devolução (AAAA-MM-DD): ")
+    else:
+        data_real = None
+    aluguel = ctrl_aluguel.atualizar_status_aluguel(id_aluguel, status, data_real)
+    print("Aluguel atualizado com sucesso!")
+    print(aluguel.to_string())
+
+
+def _excluir_aluguel() -> None:
+    for aluguel in ctrl_aluguel.listar_alugueis():
+        print(aluguel.to_string())
+    id_aluguel = _ler_inteiro("ID do aluguel que deseja excluir: ")
+    ctrl_aluguel.excluir_aluguel(id_aluguel)
+    print("Aluguel excluído com sucesso!")
+
+
+# -------------------------------------------------------------- PAGAMENTOS
+
+def _inserir_pagamento() -> None:
+    alugueis = ctrl_aluguel.listar_alugueis()
+    if not alugueis:
+        print("Cadastre um aluguel antes de registrar pagamentos.")
+        return
+    for aluguel in alugueis:
+        print(aluguel.to_string())
+
+    id_aluguel = _ler_inteiro("ID do aluguel relacionado ao pagamento: ")
+    valor = _ler_valor("Valor do pagamento (R$): ")
+    data_pagamento = _ler_data("Data do pagamento (AAAA-MM-DD): ")
+    metodo = input("Método [DINHEIRO/PIX/CARTAO_CREDITO/CARTAO_DEBITO]: ").strip().upper()
+    status = input("Status [PENDENTE/PAGO/CANCELADO]: ").strip().upper()
+
+    pagamento = Pagamento(
+        aluguel=Aluguel(id_aluguel=id_aluguel),
+        valor=valor,
+        data_pagamento=data_pagamento,
+        metodo=metodo,
+        status=status,
+    )
+    pagamento_criado = ctrl_pagamento.inserir_pagamento(pagamento)
+    print("Pagamento cadastrado com sucesso!")
+    print(pagamento_criado.to_string())
+
+
+def _atualizar_pagamento() -> None:
+    pagamentos = ctrl_pagamento.listar_pagamentos()
+    if not pagamentos:
+        print("Não há pagamentos cadastrados.")
+        return
+    for pagamento in pagamentos:
+        print(pagamento.to_string())
+
+    id_pagamento = _ler_inteiro("ID do pagamento que deseja atualizar: ")
+    id_aluguel = _ler_inteiro("ID do aluguel relacionado ao pagamento: ")
+    valor = _ler_valor("Novo valor (R$): ")
+    data_pagamento = _ler_data("Nova data (AAAA-MM-DD): ")
+    metodo = input("Novo método [DINHEIRO/PIX/CARTAO_CREDITO/CARTAO_DEBITO]: ").strip().upper()
+    status = input("Novo status [PENDENTE/PAGO/CANCELADO]: ").strip().upper()
+
+    pagamento = ctrl_pagamento.atualizar_pagamento(
+        id_pagamento, id_aluguel, valor, data_pagamento, metodo, status
+    )
+    print("Pagamento atualizado com sucesso!")
+    print(pagamento.to_string())
+
+
+def _excluir_pagamento() -> None:
+    pagamentos = ctrl_pagamento.listar_pagamentos()
+    if not pagamentos:
+        print("Não há pagamentos cadastrados.")
+        return
+    for pagamento in pagamentos:
+        print(pagamento.to_string())
+    id_pagamento = _ler_inteiro("ID do pagamento que deseja excluir: ")
+    id_aluguel = _ler_inteiro("ID do aluguel relacionado ao pagamento: ")
+    ctrl_pagamento.excluir_pagamento(id_pagamento, id_aluguel)
+    print("Pagamento excluído com sucesso!")
+
+
+# --------------------------------------------------------------- INSERIR
+
+def inserir(opcao_inserir: int = 0) -> None:
+    opcoes = {
+        1: ctrl_cliente.inserir_cliente,
+        2: ctrl_locadora.inserir_locadora,
+        3: ctrl_categoria.inserir_categoria,
+        4: ctrl_veiculo.inserir_veiculo,
+        5: ctrl_funcionario.inserir_funcionario,
+        6: _inserir_aluguel,
+        7: _inserir_pagamento,
+    }
+    acao = opcoes.get(opcao_inserir)
+    if acao:
+        _executar_com_tratamento(acao)
+    elif opcao_inserir != 0:
+        print("Opção de cadastro inválida.")
+
+
+# -------------------------------------------------------------- ATUALIZAR
+
+def atualizar(opcao_atualizar: int = 0) -> None:
+    opcoes = {
+        1: ctrl_cliente.atualizar_cliente,
+        2: ctrl_locadora.atualizar_locadora,
+        3: ctrl_categoria.atualizar_categoria,
+        4: ctrl_veiculo.atualizar_veiculo,
+        5: ctrl_funcionario.atualizar_funcionario,
+        6: _atualizar_aluguel,
+        7: _atualizar_pagamento,
+    }
+    acao = opcoes.get(opcao_atualizar)
+    if acao:
+        _executar_com_tratamento(acao)
+    elif opcao_atualizar != 0:
+        print("Opção de atualização inválida.")
+
+
+# ---------------------------------------------------------------- REMOVER
+
+def excluir(opcao_excluir: int = 0) -> None:
+    opcoes = {
+        1: ctrl_cliente.excluir_cliente,
+        2: ctrl_locadora.excluir_locadora,
+        3: ctrl_categoria.excluir_categoria,
+        4: ctrl_veiculo.excluir_veiculo,
+        5: ctrl_funcionario.excluir_funcionario,
+        6: _excluir_aluguel,
+        7: _excluir_pagamento,
+    }
+    acao = opcoes.get(opcao_excluir)
+    if acao:
+        _executar_com_tratamento(acao)
+    elif opcao_excluir != 0:
+        print("Opção de remoção inválida.")
+
+
+def _ler_opcao(mensagem: str, minimo: int, maximo: int) -> int:
+    opcao = _ler_inteiro(mensagem)
+    if not minimo <= opcao <= maximo:
+        raise ValueError(f"Escolha uma opção entre {minimo} e {maximo}.")
+    return opcao
+
+
+def run() -> None:
     print(tela_inicial.get_updated_screen())
-    config.clear_console()
+    if any(valor is None for valor in tela_inicial.get_totais().values()):
+        print("\nAviso: não foi possível ler as contagens do PostgreSQL.")
+        print("Confira o serviço do PostgreSQL e o arquivo de credenciais.")
+    input("\nPressione Enter para abrir o menu principal...")
 
     while True:
+        config.clear_console()
         print(config.MENU_PRINCIPAL)
-        opcao = int(input("Escolha uma opção [1-5]: "))
-        config.clear_console(1)
-        
-        if opcao == 1: # Relatórios
-            
+        try:
+            opcao = _ler_opcao("Escolha uma opção [1-5]: ", 1, 5)
+        except ValueError as erro:
+            print(erro)
+            input("\nPressione Enter para tentar novamente...")
+            continue
+
+        if opcao == 1:
+            config.clear_console()
             print(config.MENU_RELATORIOS)
-            opcao_relatorio = int(input("Escolha uma opção [0-6]: "))
-            config.clear_console(1)
+            try:
+                opcao_relatorio = _ler_opcao("Escolha uma opção [0-8]: ", 0, 8)
+                if opcao_relatorio != 0:
+                    try:
+                        reports(opcao_relatorio)
+                    except Exception as erro:
+                        print(f"\nNão foi possível gerar o relatório: {erro}")
+                        input("\nPressione Enter para continuar...")
+            except ValueError as erro:
+                print(erro)
+                input("\nPressione Enter para continuar...")
 
-            reports(opcao_relatorio)
-
-            config.clear_console(1)
-
-        elif opcao == 2: # Inserir Novos Registros
-            
+        elif opcao in (2, 3, 4):
+            config.clear_console()
             print(config.MENU_ENTIDADES)
-            opcao_inserir = int(input("Escolha uma opção [1-5]: "))
-            config.clear_console(1)
-
-            inserir(opcao_inserir=opcao_inserir)
-
-            config.clear_console()
-            print(tela_inicial.get_updated_screen())
-            config.clear_console()
-
-        elif opcao == 3: # Atualizar Registros
-
-            print(config.MENU_ENTIDADES)
-            opcao_atualizar = int(input("Escolha uma opção [1-5]: "))
-            config.clear_console(1)
-
-            atualizar(opcao_atualizar=opcao_atualizar)
-
-            config.clear_console()
-
-        elif opcao == 4:
-
-            print(config.MENU_ENTIDADES)
-            opcao_excluir = int(input("Escolha uma opção [1-5]: "))
-            config.clear_console(1)
-
-            excluir(opcao_excluir=opcao_excluir)
-
-            config.clear_console()
-            print(tela_inicial.get_updated_screen())
-            config.clear_console()
+            operacao = {2: inserir, 3: atualizar, 4: excluir}[opcao]
+            try:
+                escolha = _ler_opcao("Escolha uma entidade [0-7]: ", 0, 7)
+                if escolha != 0:
+                    operacao(escolha)
+            except ValueError as erro:
+                print(erro)
+                input("\nPressione Enter para continuar...")
 
         elif opcao == 5:
+            print("Obrigado por utilizar o Sistema de Locação de Veículos!")
+            break
 
-            print(tela_inicial.get_updated_screen())
-            config.clear_console()
-            print("Obrigado por utilizar o nosso sistema.")
-            exit(0)
-
-        else:
-            print("Opção incorreta.")
-            exit(1)
 
 if __name__ == "__main__":
     run()

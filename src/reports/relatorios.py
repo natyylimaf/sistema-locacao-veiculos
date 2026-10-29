@@ -1,75 +1,55 @@
+"""Relatórios do Sistema de Locação de Veículos."""
+
+from pathlib import Path
+
 from conexion.postgres_queries import PostgresQueries
+
+SQL_DIR = Path(__file__).resolve().parent.parent / "sql"
+
 
 class Relatorio:
     def __init__(self):
-        with open("sql/relatorio_clientes.sql") as f:
-            self.query_relatorio_clientes = f.read()
+        # Os arquivos reais do projeto usam nomes no singular, como relatorio_cliente.sql.
+        self.query_relatorio_clientes = (SQL_DIR / "relatorio_cliente.sql").read_text(encoding="utf-8")
+        self.query_relatorio_locadoras = (SQL_DIR / "relatorio_locadora.sql").read_text(encoding="utf-8")
+        self.query_relatorio_veiculos = (SQL_DIR / "relatorio_veiculo.sql").read_text(encoding="utf-8")
+        self.query_relatorio_funcionarios = (SQL_DIR / "relatorio_funcionario.sql").read_text(encoding="utf-8")
+        self.query_relatorio_categorias = (SQL_DIR / "relatorio_categoria.sql").read_text(encoding="utf-8")
+        self.query_relatorio_alugueis = (SQL_DIR / "relatorio_aluguel.sql").read_text(encoding="utf-8")
+        self.query_relatorio_pagamentos = (SQL_DIR / "relatorio_pagamento.sql").read_text(encoding="utf-8")
+        self.query_relatorio_faturamento = (SQL_DIR / "relatorio_faturamento_por_categoria.sql").read_text(encoding="utf-8")
 
-        with open("sql/relatorio_locadoras.sql") as f:
-            self.query_relatorio_locadoras = f.read()
-
-        with open("sql/relatorio_veiculos.sql") as f:
-            self.query_relatorio_veiculos = f.read()
-
-        with open("sql/relatorio_funcionarios.sql") as f:
-            self.query_relatorio_funcionarios = f.read()
-
-        with open("sql/relatorio_categorias.sql") as f:
-            self.query_relatorio_categorias = f.read()
-
-        with open("sql/relatorio_alugueis.sql") as f:
-            self.query_relatorio_alugueis = f.read()
-
-        with open("sql/relatorio_pagamentos.sql") as f:
-            self.query_relatorio_pagamentos = f.read()
-
-        with open("sql/relatorio_faturamento.sql") as f:
-            self.query_relatorio_faturamento = f.read()
+    @staticmethod
+    def _exibir(query: str, titulo: str) -> None:
+        db = PostgresQueries()
+        try:
+            resultado = db.sqlToDataFrame(query)
+            print(f"\n--- {titulo} ---")
+            print(resultado.to_string(index=False))
+        finally:
+            db.close()
+        input(f"\nPressione Enter para sair do relatório de {titulo.lower()}...")
 
     def get_relatorio_clientes(self):
-        db = PostgresQueries()
-        db.connect()
-        print(db.sqlToDataFrame(self.query_relatorio_clientes))
-        input("\nPressione Enter para sair do Relatório de Clientes")
+        self._exibir(self.query_relatorio_clientes, "Clientes")
 
     def get_relatorio_locadoras(self):
-        db = PostgresQueries()
-        db.connect()
-        print(db.sqlToDataFrame(self.query_relatorio_locadoras))
-        input("\nPressione Enter para sair do Relatório de Locadoras")
+        self._exibir(self.query_relatorio_locadoras, "Locadoras")
 
     def get_relatorio_veiculos(self):
-        db = PostgresQueries()
-        db.connect()
-        print(db.sqlToDataFrame(self.query_relatorio_veiculos))
-        input("\nPressione Enter para sair do Relatório de Veículos")
+        self._exibir(self.query_relatorio_veiculos, "Veículos")
 
     def get_relatorio_funcionarios(self):
-        db = PostgresQueries()
-        db.connect()
-        print(db.sqlToDataFrame(self.query_relatorio_funcionarios))
-        input("\nPressione Enter para sair do Relatório de Funcionários")
+        self._exibir(self.query_relatorio_funcionarios, "Funcionários")
 
     def get_relatorio_categorias(self):
-        db = PostgresQueries()
-        db.connect()
-        print(db.sqlToDataFrame(self.query_relatorio_categorias))
-        input("\nPressione Enter para sair do Relatório de Categorias")
+        self._exibir(self.query_relatorio_categorias, "Categorias")
 
     def get_relatorio_alugueis(self):
-        db = PostgresQueries()
-        db.connect()
-        print(db.sqlToDataFrame(self.query_relatorio_alugueis))
-        input("\nPressione Enter para sair do Relatório de Aluguéis")
+        self._exibir(self.query_relatorio_alugueis, "Aluguéis")
 
     def get_relatorio_pagamentos(self):
-        db = PostgresQueries()
-        db.connect()
-        print(db.sqlToDataFrame(self.query_relatorio_pagamentos))
-        input("\nPressione Enter para sair do Relatório de Pagamentos")
+        self._exibir(self.query_relatorio_pagamentos, "Pagamentos")
 
     def get_relatorio_faturamento(self):
-        db = PostgresQueries()
-        db.connect()
-        print(db.sqlToDataFrame(self.query_relatorio_faturamento))
-        input("\nPressione Enter para sair do Relatório de Faturamento")
+        self._exibir(self.query_relatorio_faturamento, "Faturamento por categoria")

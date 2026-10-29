@@ -1,54 +1,73 @@
-from conexion.oracle_queries import OracleQueries
+"""Cria as tabelas e carrega os dados iniciais no PostgreSQL.
 
-def create_tables(query:str):
-    list_of_commands = query.split(";")
+ATENÇÃO: o SQL create_tables_locacao.sql contém DROP TABLE ... CASCADE.
+Executar este script novamente apaga e recria as tabelas existentes.
+"""
 
-    oracle = OracleQueries(can_write=True)
-    oracle.connect()
+from pathlib import Path
 
-    for command in list_of_commands:    
-        if len(command) > 0:
-            print(command)
-            try:
-                oracle.executeDDL(command)
-                print("Successfully executed")
-            except Exception as e:
-                print(e)            
+from conexion.postgres_queries import PostgresQueries
 
-def generate_records(query:str, sep:str=';'):
-    list_of_commands = query.split(sep)
+# Raiz do repositório: .../sistema-locacao-veiculos
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+SQL_DIR = PROJECT_ROOT / "sql"
 
-    oracle = OracleQueries(can_write=True)
-    oracle.connect()
 
-    for command in list_of_commands:    
-        if len(command) > 0:
-            print(command)
-            oracle.write(command)
-            print("Successfully executed")
+def _split_sql(query: str) -> list[str]:
+    """Separa comandos SQL por ponto e vírgula e ignora trechos vazios."""
+    return [comando.strip() for comando in query.split(";") if comando.strip()]
 
-def run():
 
-    with open("../sql/create_tables_pedidos.sql") as f:
-        query_create = f.read()
+def _executar_comandos(query: str, descricao: str) -> None:
+    comandos = _split_sql(query)
+    if not comandos:
+        print(f"Nenhum comando encontrado para: {descricao}")
+        return
 
-    print("Creating tables...")
-    create_tables(query=query_create)
-    print("Tables successfully created!")
+    db = PostgresQueries(can_write=True)
+    try:
+        # Um único commit para os comandos desse arquivo; em caso de falha,
+        # PostgresQueries faz rollback da transação.
+        db.write_many(comandos)
+    finally:
+        db.close()
 
-    with open("../sql/inserting_samples_records.sql") as f:
-        query_generate_records = f.read()
+    print(f"{descricao}: {len(comandos)} comando(s) executado(s) com sucesso.")
 
-    print("Gerenating records")
-    generate_records(query=query_generate_records)
-    print("Records successfully generated!")
 
-    with open("../sql/inserting_samples_related_records.sql") as f:
-        query_generate_related_records = f.read()
+def create_tables(query: str) -> None:
+    """Executa os comandos DDL recebidos (CREATE, DROP, índices etc.)."""
+    _executar_comandos(query, "Criação das tabelas")
 
-    print("Gerenating records")
-    generate_records(query=query_generate_related_records, sep='--')
-    print("Records successfully generated!")
 
-if __name__ == '__main__':
+def generate_records(query: str, sep: str = ";") -> None:
+    """Executa os INSERTs do arquivo SQL informado."""
+    # O separador padrão correto dos scripts SQL do projeto é ';'.
+    if sep != ";":
+        query = query.replace(sep, ";")
+    _executar_comandos(query, "Inserção de registros")
+
+
+def run() -> None:
+    arquivo_tabelas = SQL_DIR / "create_tables_locacao.sql"
+    arquivo_registros = SQL_DIR / "inserting_samples_records.sql"
+    arquivo_registros_relacionados = SQL_DIR / "inserting_samples_related_records.sql"
+
+    print("Este procedimento recria as tabelas e apaga os dados que já existirem.")
+    confirmacao = input("Digite SIM para continuar: ").strip().upper()
+    if confirmacao != "SIM":
+        print("Operação cancelada. Nenhuma tabela foi alterada.")
+        return
+
+    print("\nCriando as tabelas e os índices...")
+    create_tables(arquivo_tabelas.read_text(encoding="utf-8"))
+
+    print("\nInserindo os dados de exemplo...")
+    generate_records(arquivo_registros.read_text(encoding="utf-8"))
+    generate_records(arquivo_registros_relacionados.read_text(encoding="utf-8"))
+
+    print("\nBanco inicializado com sucesso!")
+
+
+if __name__ == "__main__":
     run()
