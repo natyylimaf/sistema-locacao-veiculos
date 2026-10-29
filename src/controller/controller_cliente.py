@@ -3,15 +3,6 @@ from conexion.postgres_queries import PostgresQueries
 from controller.validacao_cpf import normalizar_cpf, validar_cpf, ler_cpf
 
 class Controller_Cliente:
-    """
-    Controlador da entidade Cliente.
-
-    Premissas baseadas no diagrama do projeto:
-    - tabela: cliente
-    - colunas: id_cliente, nome, cpf, telefone, email
-    - id_cliente é gerado pelo PostgreSQL.
-    Confirme esses nomes no banco real antes de executar.
-    """
 
     def __init__(self):
         pass
