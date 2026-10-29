@@ -1,6 +1,6 @@
 from model.cliente import Cliente
 from conexion.postgres_queries import PostgresQueries
-from validacao_cpf import normalizar_cpf, validar_cpf
+from controller.validacao_cpf import normalizar_cpf, validar_cpf
 
 class Controller_Cliente:
     """

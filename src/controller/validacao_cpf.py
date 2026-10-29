@@ -3,7 +3,7 @@ import re
 
 def normalizar_cpf(cpf: str) -> str:
     """Remove pontos, hífens, espaços e qualquer caractere que não seja dígito."""
-    return re.sub(r"\\D", "", cpf)
+    return re.sub(r"\D", "", cpf)
 
 
 def validar_cpf(cpf: str) -> bool:
