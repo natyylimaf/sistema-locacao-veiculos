@@ -31,19 +31,19 @@ CREATE TABLE LOCADORA (
 CREATE TABLE CATEGORIA (
     id_categoria INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
-    descricao VARCHAR(500) NOT NULL,
+    descricao TEXT NOT NULL,
 
     CONSTRAINT uq_categoria_nome UNIQUE (nome)
 );
 
 CREATE TABLE VEICULO (
     id_veiculo INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_categoria INTEGER NOT NULL,
     placa VARCHAR(20) NOT NULL,
     marca VARCHAR(100) NOT NULL,
     modelo VARCHAR(100) NOT NULL,
     ano INTEGER NOT NULL,
     valor_diaria NUMERIC(10,2) NOT NULL,
+    id_categoria INTEGER NOT NULL,
 
     CONSTRAINT uq_veiculo_placa UNIQUE (placa),
     CONSTRAINT ck_veiculo_ano CHECK (ano BETWEEN 1950 AND 2100),
@@ -66,15 +66,15 @@ CREATE TABLE FUNCIONARIO (
 
 CREATE TABLE ALUGUEL (
     id_aluguel INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_cliente INTEGER NOT NULL,
-    id_locadora INTEGER NOT NULL,
-    id_veiculo INTEGER NOT NULL,
-    id_funcionario INTEGER NOT NULL,
     data_retirada DATE NOT NULL,
     data_devolucao_prevista DATE NOT NULL,
     data_devolucao_real DATE,  -- fica vazia até o veículo ser devolvido
     valor_total NUMERIC(10,2) NOT NULL,
     status VARCHAR(50) NOT NULL,
+    id_cliente INTEGER NOT NULL,
+    id_locadora INTEGER NOT NULL,
+    id_veiculo INTEGER NOT NULL,
+    id_funcionario INTEGER NOT NULL,
 
     CONSTRAINT ck_aluguel_datas CHECK (data_devolucao_prevista >= data_retirada),
     CONSTRAINT ck_aluguel_valor CHECK (valor_total >= 0),
@@ -87,11 +87,11 @@ CREATE TABLE ALUGUEL (
 
 CREATE TABLE PAGAMENTO (
     id_pagamento INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    id_aluguel INTEGER NOT NULL,
     valor NUMERIC(10,2) NOT NULL,
     data_pagamento DATE NOT NULL,
     metodo VARCHAR(50) NOT NULL,
     status VARCHAR(50) NOT NULL,
+    id_aluguel INTEGER NOT NULL,
 
     CONSTRAINT ck_pagamento_valor CHECK (valor > 0),
     CONSTRAINT ck_pagamento_metodo CHECK (metodo IN ('DINHEIRO', 'PIX', 'CARTAO_CREDITO', 'CARTAO_DEBITO')),
