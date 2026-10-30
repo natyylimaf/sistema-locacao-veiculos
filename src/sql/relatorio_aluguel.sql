@@ -6,7 +6,7 @@ SELECT a.id_aluguel
      , f.nome AS nome_funcionario
      , a.data_retirada
      , a.data_devolucao_prevista
-     , a.data_devolucao_real
+     , COALESCE(TO_CHAR(a.data_devolucao_real, 'YYYY-MM-DD'), 'Não devolvido') AS data_devolucao_real
      , a.valor_total
      , a.status
   FROM aluguel a
