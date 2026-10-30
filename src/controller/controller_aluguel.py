@@ -167,6 +167,15 @@ class Controller_Aluguel:
             if not self.verifica_existencia_aluguel(db, id_aluguel):
                 raise ValueError(f"O aluguel {id_aluguel} não existe.")
 
+            if db.fetch_one(
+                "SELECT id_pagamento FROM pagamento WHERE id_aluguel = %s",
+                (id_aluguel,),
+            ):
+                raise ValueError(
+                    "Não é possível excluir este aluguel, "
+                    "pois existem pagamentos vinculados a ele."
+                )
+
             db.execute(
                 "DELETE FROM aluguel WHERE id_aluguel = %s",
                 (id_aluguel,)
