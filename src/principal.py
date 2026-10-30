@@ -122,9 +122,9 @@ def reports(opcao_relatorio: int = 0) -> None:
     opcoes = {
         1: relatorio.get_relatorio_clientes,
         2: relatorio.get_relatorio_locadoras,
-        3: relatorio.get_relatorio_veiculos,
-        4: relatorio.get_relatorio_funcionarios,
-        5: relatorio.get_relatorio_categorias,
+        3: relatorio.get_relatorio_categorias,
+        4: relatorio.get_relatorio_veiculos,
+        5: relatorio.get_relatorio_funcionarios,
         6: relatorio.get_relatorio_alugueis,
         7: relatorio.get_relatorio_pagamentos,
         8: relatorio.get_relatorio_faturamento,

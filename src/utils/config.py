@@ -1,7 +1,7 @@
 
 MENU_PRINCIPAL = """\n========== SISTEMA DE LOCAÇÃO DE VEÍCULOS ==========\n1 - Relatórios\n2 - Inserir registros\n3 - Atualizar registros\n4 - Remover registros\n5 - Sair\n"""
 
-MENU_RELATORIOS = """\n==================== RELATÓRIOS ====================\n1 - Clientes\n2 - Locadoras\n3 - Veículos\n4 - Funcionários\n5 - Categorias\n6 - Aluguéis\n7 - Pagamentos\n8 - Faturamento por categoria\n0 - Voltar ao menu principal\n"""
+MENU_RELATORIOS = """\n==================== RELATÓRIOS ====================\n1 - Clientes\n2 - Locadoras\n3 - Categorias\n4 - Veículos\n5 - Funcionários\n6 - Aluguéis\n7 - Pagamentos\n8 - Faturamento por categoria\n0 - Voltar ao menu principal\n"""
 
 MENU_ENTIDADES = """\n==================== ENTIDADES =====================\n1 - Clientes\n2 - Locadoras\n3 - Categorias\n4 - Veículos\n5 - Funcionários\n6 - Aluguéis (cadastro/status/devolução)\n7 - Pagamentos\n0 - Voltar ao menu principal\n"""
 
