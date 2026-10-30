@@ -1,6 +1,7 @@
 from model.veiculo import Veiculo
 from model.categoria import Categoria
 from conexion.postgres_queries import PostgresQueries
+from reports.relatorios import Relatorio
 
 
 class Controller_Veiculo:
@@ -65,9 +66,16 @@ class Controller_Veiculo:
         try:
             ano = int(input("Ano: ").strip())
             valor_diaria = float(input("Valor da diária: R$ ").strip().replace(",", "."))
-            id_categoria = int(input("ID da categoria: ").strip())
         except ValueError:
-            print("Ano, valor da diária e ID da categoria devem ser numéricos.")
+            print("Ano e valor da diária devem ser numéricos.")
+            return None
+
+        Relatorio().get_relatorio_categorias(pausar=False)
+
+        try:
+            id_categoria = int(input("\nID da categoria: ").strip())
+        except ValueError:
+            print("O ID da categoria deve ser numérico.")
             return None
 
         if not all((placa, marca, modelo)):

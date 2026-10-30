@@ -20,7 +20,7 @@ class Relatorio:
         self.query_relatorio_faturamento = (SQL_DIR / "relatorio_faturamento_por_categoria.sql").read_text(encoding="utf-8")
 
     @staticmethod
-    def _exibir(query: str, titulo: str) -> None:
+    def _exibir(query: str, titulo: str, pausar: bool = True) -> None:
         db = PostgresQueries()
         try:
             resultado = db.sqlToDataFrame(query)
@@ -28,7 +28,8 @@ class Relatorio:
             print(resultado.to_string(index=False))
         finally:
             db.close()
-        input(f"\nPressione Enter para sair do relatório de {titulo.lower()}...")
+        if pausar:
+            input(f"\nPressione Enter para sair do relatório de {titulo.lower()}...")
 
     def get_relatorio_clientes(self):
         self._exibir(self.query_relatorio_clientes, "Clientes")
@@ -42,8 +43,8 @@ class Relatorio:
     def get_relatorio_funcionarios(self):
         self._exibir(self.query_relatorio_funcionarios, "Funcionários")
 
-    def get_relatorio_categorias(self):
-        self._exibir(self.query_relatorio_categorias, "Categorias")
+    def get_relatorio_categorias(self, pausar: bool = True):
+        self._exibir(self.query_relatorio_categorias, "Categorias", pausar)
 
     def get_relatorio_alugueis(self):
         self._exibir(self.query_relatorio_alugueis, "Aluguéis")
