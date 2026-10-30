@@ -27,3 +27,7 @@ def validar_cpf(cpf: str) -> bool:
     segundo_digito = 0 if resto == 10 else resto
 
     return numeros[10] == segundo_digito
+
+def ler_cpf(mensagem: str = "CPF: ") -> str:
+    """Lê o CPF digitado (válido ou não) e devolve só os dígitos."""
+    return normalizar_cpf(input(mensagem).strip())

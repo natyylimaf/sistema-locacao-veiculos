@@ -1,19 +1,11 @@
 from model.cliente import Cliente
 from conexion.postgres_queries import PostgresQueries
-from controller.validacao_cpf import normalizar_cpf, validar_cpf, ler_cpf
+from controller.validacao_cpf import ler_cpf
 
 class Controller_Cliente:
 
     def __init__(self):
         pass
-
-    @staticmethod
-    def _normalizar_cpf(cpf: str) -> str:
-        """Valida o CPF e retorna somente os 11 dígitos."""
-        cpf_normalizado = normalizar_cpf(cpf)
-        if not validar_cpf(cpf_normalizado):
-            raise ValueError("CPF inválido. Confira os 11 dígitos informados.")
-        return cpf_normalizado
 
     @staticmethod
     def _cliente_from_row(row):
