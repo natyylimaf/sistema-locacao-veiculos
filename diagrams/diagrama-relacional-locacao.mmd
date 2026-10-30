@@ -1,71 +1,71 @@
 erDiagram
-    CLIENTE ||--o{ ALUGUEL : FAZ
-    LOCADORA ||--o{ ALUGUEL : RECEBE
-    VEICULO ||--o{ ALUGUEL : UTILIZADO
-    CATEGORIA ||--o{ VEICULO : PERTENCE
-    FUNCIONARIO ||--o{ ALUGUEL : GERENCIA
-    ALUGUEL ||--o{ PAGAMENTO : POSSUI
+    CLIENTE ||--o{ ALUGUEL : faz
+    LOCADORA ||--o{ ALUGUEL : recebe
+    VEICULO ||--o{ ALUGUEL : utilizado
+    CATEGORIA ||--o{ VEICULO : pertence
+    FUNCIONARIO ||--o{ ALUGUEL : gerencia
+    ALUGUEL ||--o{ PAGAMENTO : possui
 
     CLIENTE {
-        integer id_cliente PK
-        varchar nome "NOT NULL"
-        varchar cpf "NOT NULL"
-        varchar telefone "NOT NULL"
-        varchar email "NOT NULL"
+        INTEGER id_cliente PK "NOT NULL"
+        VARCHAR(200) nome "NOT NULL"
+        VARCHAR(50) cpf "NOT NULL"
+        VARCHAR(50) telefone "NOT NULL"
+        VARCHAR(500) email "NOT NULL"
     }
 
     LOCADORA {
-        integer id_locadora PK
-        varchar nome "NOT NULL"
-        varchar cnpj "NOT NULL"
-        varchar telefone "NOT NULL"
-        varchar email "NOT NULL" 
+        INTEGER id_locadora PK "NOT NULL"
+        VARCHAR(200) nome "NOT NULL"
+        VARCHAR(50) cnpj "NOT NULL"
+        VARCHAR(50) telefone "NOT NULL"
+        VARCHAR(500) email "NOT NULL" 
     }
 
     ALUGUEL {
-        integer id_aluguel PK
-        integer id_cliente PK, FK
-        integer id_locadora PK,FK
-        integer id_veiculo PK, FK
-        integer id_funcionario PK, FK
-        date data_retirada "NOT NULL"
-        date data_devolucao_prevista "NOT NULL"
-        date data_devolucao_real
-        numeric valor_total "NOT NULL"
-        varchar status "NOT NULL"
+        INTEGER id_aluguel PK "NOT NULL"
+        DATE data_retirada "NOT NULL"
+        DATE data_devolucao_prevista "NOT NULL"
+        DATE data_devolucao_real "NULL"
+        NUMERIC(10,2) valor_total "NOT NULL"
+        VARCHAR(50) status "NOT NULL"
+        INTEGER id_cliente FK "NOT NULL"
+        INTEGER id_locadora FK "NOT NULL"
+        INTEGER id_veiculo FK "NOT NULL"
+        INTEGER id_funcionario FK "NOT NULL"
     }
 
     VEICULO {
-        integer id_veiculo PK
-        integer id_categoria PK, FK
-        varchar placa "NOT NULL"
-        varchar marca "NOT NULL"
-        varchar modelo "NOT NULL"
-        integer ano "NOT NULL"
-        numeric valor_diaria "NOT NULL"
+        INTEGER id_veiculo PK "NOT NULL"
+        VARCHAR(20) placa "NOT NULL"
+        VARCHAR(100) marca "NOT NULL"
+        VARCHAR(100) modelo "NOT NULL"
+        INTEGER ano "NOT NULL"
+        NUMERIC(10,2) valor_diaria "NOT NULL"
+        INTEGER id_categoria FK "NOT NULL"
     }
 
     CATEGORIA {
-        integer id_categoria PK
-        varchar nome "NOT NULL"
-        varchar descricao "NOT NULL"
+        INTEGER id_categoria PK "NOT NULL"
+        VARCHAR(100) nome "NOT NULL"
+        TEXT descricao "NOT NULL"
     }
 
     FUNCIONARIO {
-        integer id_funcionario PK
-        varchar email "NOT NULL"
-        varchar senha "NOT NULL"
-        varchar nome "NOT NULL"
-        varchar cpf "NOT NULL"
-        varchar telefone "NOT NULL"
-        varchar cargo "NOT NULL"
+        INTEGER id_funcionario PK "NOT NULL"
+        VARCHAR(200) email "NOT NULL"
+        VARCHAR(255) senha "NOT NULL"
+        VARCHAR(200) nome "NOT NULL"
+        VARCHAR(50) cpf "NOT NULL"
+        VARCHAR(50) telefone "NOT NULL"
+        VARCHAR(100) cargo "NOT NULL"
     }
 
     PAGAMENTO {
-        integer id_pagamento PK
-        integer id_aluguel PK, FK
-        numeric valor "NOT NULL"
-        date data_pagamento "NOT NULL"
-        varchar metodo "NOT NULL"
-        varchar status "NOT NULL"
+        INTEGER id_pagamento PK "NOT NULL"
+        NUMERIC(10,2) valor "NOT NULL"
+        DATE data_pagamento "NOT NULL"
+        VARCHAR(50) metodo "NOT NULL"
+        VARCHAR(50) status "NOT NULL"
+        INTEGER id_aluguel FK "NOT NULL"
     }
