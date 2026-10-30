@@ -128,9 +128,16 @@ class Controller_Veiculo:
             try:
                 ano = int(input("Novo ano: ").strip())
                 valor_diaria = float(input("Novo valor da diária: R$ ").strip().replace(",", "."))
-                id_categoria = int(input("Novo ID da categoria: ").strip())
             except ValueError:
-                print("Ano, valor da diária e ID da categoria devem ser numéricos.")
+                print("Ano e valor da diária devem ser numéricos.")
+                return None
+
+            Relatorio().get_relatorio_categorias(pausar=False)
+
+            try:
+                id_categoria = int(input("\nNovo ID da categoria: ").strip())
+            except ValueError:
+                print("O ID da categoria deve ser numérico.")
                 return None
 
             if not all((placa, marca, modelo)):
